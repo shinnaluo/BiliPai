@@ -312,13 +312,16 @@ class PortraitDetailPresentationPolicyTest {
         val spec = resolveStandalonePortraitPagerMotionSpec()
 
         assertEquals(220, spec.enterDurationMillis)
-        assertEquals(180, spec.exitDurationMillis)
-        assertEquals(0.98f, spec.exitScaleTarget)
+        assertEquals(220, spec.exitDurationMillis)
+        assertEquals(0.96f, spec.exitScaleTarget)
+        assertEquals(0.08f, spec.exitTranslateUpFraction)
+        assertEquals(240, spec.inlineReturnDurationMillis)
+        assertEquals(0.985f, spec.inlineReturnInitialScale)
     }
 
     @Test
-    fun sharedPlayerPortraitExit_disablesPagerAnimationToAvoidSurfaceFlicker() {
-        assertFalse(shouldAnimateStandalonePortraitPager(useSharedPlayer = true))
+    fun sharedPlayerPortraitExit_keepsPagerAnimationForDetailReturn() {
+        assertTrue(shouldAnimateStandalonePortraitPager(useSharedPlayer = true))
         assertTrue(shouldAnimateStandalonePortraitPager(useSharedPlayer = false))
     }
 }

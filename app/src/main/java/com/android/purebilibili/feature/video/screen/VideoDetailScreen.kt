@@ -28,6 +28,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
@@ -56,6 +57,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
@@ -574,6 +576,7 @@ private fun PortraitInlineVideoPlayerHost(
     animatedViewportWidth: Dp,
     animatedViewportHeight: Dp,
     inlinePlayerAlpha: Float,
+    inlinePlayerScale: Float,
     context: Context,
     playerState: VideoPlayerState,
     uiState: PlayerUiState,
@@ -611,6 +614,11 @@ private fun PortraitInlineVideoPlayerHost(
             .width(animatedViewportWidth)
             .height(animatedViewportHeight)
             .alpha(inlinePlayerAlpha)
+            .graphicsLayer {
+                scaleX = inlinePlayerScale
+                scaleY = inlinePlayerScale
+                transformOrigin = TransformOrigin(0.5f, 0f)
+            }
     ) {
         VideoPlayerSection(
             playerState = playerState,
@@ -1544,12 +1552,29 @@ fun VideoDetailScreen(
         targetValue = if (isPortraitFullscreen) 0f else 1f,
         animationSpec = tween(
             durationMillis = if (shouldAnimatePortraitPager) {
-                portraitPagerMotionSpec.exitDurationMillis
+                portraitPagerMotionSpec.inlineReturnDurationMillis
             } else {
                 0
-            }
+            },
+            easing = FastOutSlowInEasing
         ),
         label = "inline-player-alpha"
+    )
+    val inlinePlayerScale by animateFloatAsState(
+        targetValue = if (isPortraitFullscreen) {
+            portraitPagerMotionSpec.inlineReturnInitialScale
+        } else {
+            1f
+        },
+        animationSpec = tween(
+            durationMillis = if (shouldAnimatePortraitPager) {
+                portraitPagerMotionSpec.inlineReturnDurationMillis
+            } else {
+                0
+            },
+            easing = FastOutSlowInEasing
+        ),
+        label = "inline-player-return-scale"
     )
     var portraitSyncSnapshotBvid by rememberSaveable { mutableStateOf<String?>(null) }
     var portraitSyncSnapshotCid by remember { mutableLongStateOf(0L) }
@@ -2699,6 +2724,7 @@ fun VideoDetailScreen(
                             animatedViewportWidth = animatedViewportWidth,
                             animatedViewportHeight = animatedViewportHeight,
                             inlinePlayerAlpha = inlinePlayerAlpha,
+                            inlinePlayerScale = inlinePlayerScale,
                             context = context,
                             playerState = playerState,
                             uiState = uiState,
@@ -3155,11 +3181,24 @@ fun VideoDetailScreen(
                 androidx.compose.animation.EnterTransition.None
             },
             exit = if (shouldAnimatePortraitPager) {
+                val exitSpec = tween<Float>(
+                    durationMillis = portraitPagerMotionSpec.exitDurationMillis,
+                    easing = FastOutSlowInEasing
+                )
                 fadeOut(
-                    animationSpec = tween(portraitPagerMotionSpec.exitDurationMillis)
+                    animationSpec = exitSpec
                 ) + scaleOut(
                     targetScale = portraitPagerMotionSpec.exitScaleTarget,
-                    animationSpec = tween(portraitPagerMotionSpec.exitDurationMillis)
+                    animationSpec = exitSpec,
+                    transformOrigin = TransformOrigin(0.5f, 0f)
+                ) + slideOutVertically(
+                    animationSpec = tween(
+                        durationMillis = portraitPagerMotionSpec.exitDurationMillis,
+                        easing = FastOutSlowInEasing
+                    ),
+                    targetOffsetY = {
+                        -(it * portraitPagerMotionSpec.exitTranslateUpFraction).roundToInt()
+                    }
                 )
             } else {
                 androidx.compose.animation.ExitTransition.None

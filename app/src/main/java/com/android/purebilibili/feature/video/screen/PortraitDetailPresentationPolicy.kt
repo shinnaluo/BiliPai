@@ -11,7 +11,10 @@ internal data class PortraitInlinePlayerLayoutSpec(
 internal data class StandalonePortraitPagerMotionSpec(
     val enterDurationMillis: Int,
     val exitDurationMillis: Int,
-    val exitScaleTarget: Float
+    val exitScaleTarget: Float,
+    val exitTranslateUpFraction: Float,
+    val inlineReturnDurationMillis: Int,
+    val inlineReturnInitialScale: Float
 )
 
 internal enum class PortraitFullscreenButtonAction {
@@ -50,8 +53,11 @@ internal fun shouldActivatePortraitFullscreenState(
 internal fun resolveStandalonePortraitPagerMotionSpec(): StandalonePortraitPagerMotionSpec {
     return StandalonePortraitPagerMotionSpec(
         enterDurationMillis = 220,
-        exitDurationMillis = 180,
-        exitScaleTarget = 0.98f
+        exitDurationMillis = 220,
+        exitScaleTarget = 0.96f,
+        exitTranslateUpFraction = 0.08f,
+        inlineReturnDurationMillis = 240,
+        inlineReturnInitialScale = 0.985f
     )
 }
 
@@ -69,7 +75,7 @@ internal fun shouldEnableInlinePortraitScrollTransform(
 }
 
 internal fun shouldAnimateStandalonePortraitPager(useSharedPlayer: Boolean): Boolean {
-    return !useSharedPlayer
+    return true
 }
 
 internal fun resolvePortraitFullscreenButtonAction(
