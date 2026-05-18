@@ -184,6 +184,41 @@ class BottomBarIndicatorPolicyTest {
     }
 
     @Test
+    fun `transparent glass preset keeps idle text capture for selected capsule`() {
+        assertTrue(
+            shouldRenderBottomBarRefractionCapture(
+                glassEnabled = true,
+                hasBackdrop = true,
+                captureProgress = 1f,
+                isTransitionRunning = false,
+                isFeedScrollInProgress = false,
+                isBottomBarInteractionActive = false,
+                allowIdleGlassEffect = true
+            )
+        )
+        assertTrue(
+            shouldRenderBottomBarIndicatorBackdrop(
+                glassEnabled = true,
+                hasContentBackdrop = true,
+                indicatorProgress = 1f,
+                isTransitionRunning = false,
+                isBottomBarInteractionActive = false,
+                allowIdleGlassEffect = true
+            )
+        )
+        assertFalse(
+            shouldRenderBottomBarIndicatorBackdrop(
+                glassEnabled = true,
+                hasContentBackdrop = true,
+                indicatorProgress = 1f,
+                isTransitionRunning = true,
+                isBottomBarInteractionActive = false,
+                allowIdleGlassEffect = true
+            )
+        )
+    }
+
+    @Test
     fun `heavy bottom bar effects require settled interaction progress`() {
         assertFalse(
             shouldRenderBottomBarHeavyInteractiveEffects(
@@ -335,7 +370,7 @@ class BottomBarIndicatorPolicyTest {
     }
 
     @Test
-    fun `transparent glass preset damps bilipai horizontal refraction motion`() {
+    fun `transparent glass preset removes bilipai panel drift for aligned sliding`() {
         val profile = resolveBottomBarRefractionMotionProfile(
             position = 1.32f,
             velocity = 860f,
@@ -347,8 +382,8 @@ class BottomBarIndicatorPolicyTest {
         )
 
         assertEquals(profile.progress, effectiveProfile.progress, 0.001f)
-        assertTrue(effectiveProfile.exportPanelOffsetFraction < profile.exportPanelOffsetFraction)
-        assertTrue(effectiveProfile.indicatorPanelOffsetFraction < profile.indicatorPanelOffsetFraction)
+        assertEquals(0f, effectiveProfile.exportPanelOffsetFraction, 0.001f)
+        assertEquals(0f, effectiveProfile.indicatorPanelOffsetFraction, 0.001f)
         assertEquals(0f, effectiveProfile.visiblePanelOffsetFraction, 0.001f)
         assertTrue(effectiveProfile.visibleSelectionEmphasis > profile.visibleSelectionEmphasis)
         assertTrue(effectiveProfile.exportSelectionEmphasis > profile.exportSelectionEmphasis)
@@ -357,6 +392,25 @@ class BottomBarIndicatorPolicyTest {
         assertEquals(1f, effectiveProfile.indicatorLensAmountScale, 0.001f)
         assertEquals(1f, effectiveProfile.indicatorLensHeightScale, 0.001f)
         assertEquals(1f, effectiveProfile.chromaticBoostScale, 0.001f)
+    }
+
+    @Test
+    fun `transparent glass preset keeps content layers stationary while tuned preset keeps drift`() {
+        val tuned = resolveBottomBarPresetPanelOffsets(
+            preset = BottomBarLiquidGlassPreset.BILIPAI_TUNED,
+            rawPanelOffsetPx = 12f
+        )
+        val transparent = resolveBottomBarPresetPanelOffsets(
+            preset = BottomBarLiquidGlassPreset.BACKDROP_NATIVE,
+            rawPanelOffsetPx = 12f
+        )
+
+        assertEquals(12f, tuned.visiblePanelOffsetPx, 0.001f)
+        assertEquals(12f, tuned.exportPanelOffsetPx, 0.001f)
+        assertEquals(12f, tuned.indicatorPanelOffsetPx, 0.001f)
+        assertEquals(0f, transparent.visiblePanelOffsetPx, 0.001f)
+        assertEquals(0f, transparent.exportPanelOffsetPx, 0.001f)
+        assertEquals(0f, transparent.indicatorPanelOffsetPx, 0.001f)
     }
 
     @Test

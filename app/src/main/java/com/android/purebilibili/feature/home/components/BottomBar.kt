@@ -553,9 +553,12 @@ internal fun shouldRenderBottomBarRefractionCapture(
     captureProgress: Float,
     isTransitionRunning: Boolean = false,
     isFeedScrollInProgress: Boolean = false,
-    isBottomBarInteractionActive: Boolean = false
+    isBottomBarInteractionActive: Boolean = false,
+    allowIdleGlassEffect: Boolean = false
 ): Boolean {
     if (!glassEnabled || !hasBackdrop || captureProgress <= BottomBarTransientAlphaThreshold) return false
+    if (isTransitionRunning) return false
+    if (allowIdleGlassEffect) return true
     return shouldRenderBottomBarHeavyInteractiveEffects(
         isTransitionRunning = isTransitionRunning,
         isBottomBarInteractionActive = isBottomBarInteractionActive,
@@ -568,9 +571,12 @@ internal fun shouldRenderBottomBarIndicatorBackdrop(
     hasContentBackdrop: Boolean,
     indicatorProgress: Float,
     isTransitionRunning: Boolean = false,
-    isBottomBarInteractionActive: Boolean = false
+    isBottomBarInteractionActive: Boolean = false,
+    allowIdleGlassEffect: Boolean = false
 ): Boolean {
     if (!glassEnabled || !hasContentBackdrop) return false
+    if (isTransitionRunning) return false
+    if (allowIdleGlassEffect && indicatorProgress > BottomBarTransientAlphaThreshold) return true
     return shouldRenderBottomBarHeavyInteractiveEffects(
         isTransitionRunning = isTransitionRunning,
         isBottomBarInteractionActive = isBottomBarInteractionActive,
@@ -1015,6 +1021,12 @@ internal data class BottomBarRefractionMotionProfile(
     val indicatorLensAmountScale: Float,
     val indicatorLensHeightScale: Float,
     val chromaticBoostScale: Float
+)
+
+internal data class BottomBarPresetPanelOffsets(
+    val visiblePanelOffsetPx: Float,
+    val exportPanelOffsetPx: Float,
+    val indicatorPanelOffsetPx: Float
 )
 
 internal data class BottomBarVerticalGlassMotionProfile(
@@ -1492,8 +1504,8 @@ internal fun resolveBottomBarEffectiveRefractionMotionProfile(
     return when (preset) {
         BottomBarLiquidGlassPreset.BILIPAI_TUNED -> profile
         BottomBarLiquidGlassPreset.BACKDROP_NATIVE -> profile.copy(
-            exportPanelOffsetFraction = profile.exportPanelOffsetFraction * 0.12f,
-            indicatorPanelOffsetFraction = profile.indicatorPanelOffsetFraction * 0.16f,
+            exportPanelOffsetFraction = 0f,
+            indicatorPanelOffsetFraction = 0f,
             visiblePanelOffsetFraction = 0f,
             visibleSelectionEmphasis = lerp(1f, profile.visibleSelectionEmphasis, 0.32f),
             exportSelectionEmphasis = lerp(1f, profile.exportSelectionEmphasis, 0.24f),
@@ -1502,6 +1514,24 @@ internal fun resolveBottomBarEffectiveRefractionMotionProfile(
             indicatorLensAmountScale = 1f,
             indicatorLensHeightScale = 1f,
             chromaticBoostScale = 1f
+        )
+    }
+}
+
+internal fun resolveBottomBarPresetPanelOffsets(
+    preset: BottomBarLiquidGlassPreset,
+    rawPanelOffsetPx: Float
+): BottomBarPresetPanelOffsets {
+    return when (preset) {
+        BottomBarLiquidGlassPreset.BILIPAI_TUNED -> BottomBarPresetPanelOffsets(
+            visiblePanelOffsetPx = rawPanelOffsetPx,
+            exportPanelOffsetPx = rawPanelOffsetPx,
+            indicatorPanelOffsetPx = rawPanelOffsetPx
+        )
+        BottomBarLiquidGlassPreset.BACKDROP_NATIVE -> BottomBarPresetPanelOffsets(
+            visiblePanelOffsetPx = 0f,
+            exportPanelOffsetPx = 0f,
+            indicatorPanelOffsetPx = 0f
         )
     }
 }
@@ -2720,31 +2750,56 @@ private fun KernelSuAlignedBottomBar(
                     }
                 }
             }
-            val interactiveHighlightCenterXPx by remember(indicatorTranslationXPx, itemWidthPx, panelOffsetPx) {
+            val presetPanelOffsets = remember(liquidGlassPreset, panelOffsetPx) {
+                resolveBottomBarPresetPanelOffsets(
+                    preset = liquidGlassPreset,
+                    rawPanelOffsetPx = panelOffsetPx
+                )
+            }
+            val interactiveHighlightCenterXPx by remember(
+                indicatorTranslationXPx,
+                itemWidthPx,
+                presetPanelOffsets.indicatorPanelOffsetPx
+            ) {
                 derivedStateOf {
                     resolveBottomBarInteractiveHighlightCenterX(
                         indicatorTranslationXPx = indicatorTranslationXPx,
                         itemWidthPx = itemWidthPx,
-                        panelOffsetPx = panelOffsetPx
+                        panelOffsetPx = presetPanelOffsets.indicatorPanelOffsetPx
                     )
                 }
             }
+            val transparentGlassPreset = liquidGlassPreset == BottomBarLiquidGlassPreset.BACKDROP_NATIVE
             val backdropPresetProgress = resolveBottomBarBackdropPresetProgress(
                 motionProgress = motionProgress,
                 verticalProgress = verticalGlassProfile.progress,
                 pressProgress = dampedDragState.pressProgress
             )
+            val effectiveCaptureProgress = if (transparentGlassPreset && glassEnabled) {
+                1f
+            } else {
+                backdropPresetProgress.captureProgress
+            }
+            val effectiveIndicatorProgress = if (transparentGlassPreset && glassEnabled) {
+                1f
+            } else {
+                backdropPresetProgress.indicatorProgress
+            }
             val captureLensSpec = resolveBottomBarBackdropPresetCaptureLens(
-                progress = backdropPresetProgress.captureProgress
+                progress = effectiveCaptureProgress
             )
             val indicatorLensSpec = resolveBottomBarBackdropPresetIndicatorLens(
-                progress = backdropPresetProgress.indicatorProgress
+                progress = effectiveIndicatorProgress
             )
             val captureHighlightAlpha = resolveBottomBarLiquidGlassHighlightAlpha(
-                backdropPresetProgress.captureProgress
+                effectiveCaptureProgress
             )
             val indicatorHighlightAlpha = resolveBottomBarLiquidGlassHighlightAlpha(
-                backdropPresetProgress.indicatorProgress
+                effectiveIndicatorProgress
+            )
+            val nativeIndicatorSpec = resolveBottomBarBackdropNativeSurfaceSpec(
+                blurRadiusDp = tuning.shellBlurRadiusDp,
+                verticalProgress = verticalGlassProfile.progress
             )
             val indicatorGlowAlpha = resolveBottomBarIndicatorGlowAlpha(
                 glassEnabled = glassEnabled,
@@ -2757,17 +2812,19 @@ private fun KernelSuAlignedBottomBar(
             val shouldRenderRefractionCapture = shouldRenderBottomBarRefractionCapture(
                 glassEnabled = glassEnabled,
                 hasBackdrop = backdrop != null,
-                captureProgress = backdropPresetProgress.captureProgress,
+                captureProgress = effectiveCaptureProgress,
                 isTransitionRunning = isTransitionRunning,
                 isFeedScrollInProgress = isFeedScrollInProgress,
-                isBottomBarInteractionActive = isBottomBarInteractionActive
+                isBottomBarInteractionActive = isBottomBarInteractionActive,
+                allowIdleGlassEffect = transparentGlassPreset
             )
             val shouldRenderIndicatorBackdrop = shouldRenderBottomBarIndicatorBackdrop(
                 glassEnabled = glassEnabled,
                 hasContentBackdrop = backdrop != null,
-                indicatorProgress = backdropPresetProgress.indicatorProgress,
+                indicatorProgress = effectiveIndicatorProgress,
                 isTransitionRunning = isTransitionRunning,
-                isBottomBarInteractionActive = isBottomBarInteractionActive
+                isBottomBarInteractionActive = isBottomBarInteractionActive,
+                allowIdleGlassEffect = transparentGlassPreset
             )
             val contentBackdrop = if (shouldRenderIndicatorBackdrop && backdrop != null) {
                 rememberCombinedBackdrop(backdrop, tabsBackdrop)
@@ -2802,7 +2859,7 @@ private fun KernelSuAlignedBottomBar(
                 selectedColor = selectedContentColor(item),
                 themeWeight = coverage,
                 glassEnabled = glassEnabled,
-                indicatorProgress = backdropPresetProgress.indicatorProgress,
+                indicatorProgress = effectiveIndicatorProgress,
                 indicatorBackdropEnabled = shouldRenderIndicatorBackdrop
             )
 
@@ -2846,7 +2903,7 @@ private fun KernelSuAlignedBottomBar(
                     modifier = Modifier
                         .matchParentSize()
                         .graphicsLayer {
-                            translationX = panelOffsetPx
+                            translationX = presetPanelOffsets.visiblePanelOffsetPx
                             val progress = backdropPresetProgress.shellProgress
                             val bumpScale = if (glassEnabled && size.width > 0f) {
                                 lerp(1f, 1f + 16.dp.toPx() / size.width, progress)
@@ -2889,7 +2946,7 @@ private fun KernelSuAlignedBottomBar(
                             .fillMaxSize()
                             .padding(dockContentPadding)
                             .alpha(dockContentAlpha)
-                            .graphicsLayer { translationX = panelOffsetPx },
+                            .graphicsLayer { translationX = presetPanelOffsets.visiblePanelOffsetPx },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         visibleItems.forEachIndexed { index, item ->
@@ -2955,7 +3012,8 @@ private fun KernelSuAlignedBottomBar(
                             .alpha(0f)
                             .layerBackdrop(tabsBackdrop)
                             .graphicsLayer {
-                                translationX = panelOffsetPx - captureHorizontalOverscan.toPx()
+                                translationX = presetPanelOffsets.exportPanelOffsetPx -
+                                    captureHorizontalOverscan.toPx()
                             }
                             .run {
                                 when (liquidGlassPreset) {
@@ -3120,7 +3178,8 @@ private fun KernelSuAlignedBottomBar(
                         modifier = Modifier
                             .alpha(dockContentAlpha)
                             .graphicsLayer {
-                                translationX = indicatorTranslationXPx + panelOffsetPx
+                                translationX = indicatorTranslationXPx +
+                                    presetPanelOffsets.indicatorPanelOffsetPx
                                 val homeScaleX = if (selectedIndex == homeIndex) {
                                     homeClickPulseTransform.scaleX
                                 } else {
@@ -3145,22 +3204,45 @@ private fun KernelSuAlignedBottomBar(
                                         shape = { shellShape },
                                         effects = {
                                             lens(
-                                                refractionHeight = indicatorLensSpec.refractionHeightDp.dp.toPx(),
-                                                refractionAmount = indicatorLensSpec.refractionAmountDp.dp.toPx(),
+                                                refractionHeight = if (transparentGlassPreset) {
+                                                    nativeIndicatorSpec.refractionHeightDp.dp.toPx()
+                                                } else {
+                                                    indicatorLensSpec.refractionHeightDp.dp.toPx()
+                                                },
+                                                refractionAmount = if (transparentGlassPreset) {
+                                                    nativeIndicatorSpec.refractionAmountDp.dp.toPx()
+                                                } else {
+                                                    indicatorLensSpec.refractionAmountDp.dp.toPx()
+                                                },
                                                 depthEffect = true,
-                                                chromaticAberration = true
+                                                chromaticAberration = !transparentGlassPreset
                                             )
                                         },
                                         highlight = {
-                                            Highlight.Default.copy(alpha = maxOf(indicatorHighlightAlpha, indicatorGlowAlpha))
+                                            Highlight.Default.copy(
+                                                alpha = if (transparentGlassPreset) {
+                                                    maxOf(
+                                                        nativeIndicatorSpec.highlightAlpha,
+                                                        indicatorGlowAlpha * 0.14f
+                                                    )
+                                                } else {
+                                                    maxOf(indicatorHighlightAlpha, indicatorGlowAlpha)
+                                                }
+                                            )
                                         },
                                         shadow = {
-                                            Shadow(alpha = indicatorGlowAlpha)
+                                            Shadow(
+                                                alpha = if (transparentGlassPreset) {
+                                                    maxOf(nativeIndicatorSpec.shadowAlpha, indicatorGlowAlpha * 0.12f)
+                                                } else {
+                                                    indicatorGlowAlpha
+                                                }
+                                            )
                                         },
                                         innerShadow = {
                                             InnerShadow(
                                                 radius = 8.dp * indicatorGlowAlpha,
-                                                alpha = indicatorGlowAlpha
+                                                alpha = if (transparentGlassPreset) 0f else indicatorGlowAlpha
                                             )
                                         },
                                         layerBlock = {
@@ -3195,7 +3277,7 @@ private fun KernelSuAlignedBottomBar(
                             .fillMaxSize()
                             .padding(dockContentPadding)
                             .alpha(0f)
-                            .graphicsLayer { translationX = panelOffsetPx }
+                            .graphicsLayer { translationX = presetPanelOffsets.visiblePanelOffsetPx }
                             .horizontalDragGesture(
                                 dragState = dampedDragState,
                                 itemWidthPx = itemWidthPx
