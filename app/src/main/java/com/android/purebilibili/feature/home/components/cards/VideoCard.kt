@@ -364,24 +364,11 @@ fun ElegantVideoCard(
         }
         onClick(video.bvid, video.cid)
     }
-    //  尝试获取共享元素作用域
-    val sharedTransitionScope = LocalSharedTransitionScope.current
-    val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
-    val coverSharedEnabled = shouldEnableVideoCoverSharedTransition(
-        transitionEnabled = transitionEnabled,
-        hasSharedTransitionScope = sharedTransitionScope != null,
-        hasAnimatedVisibilityScope = animatedVisibilityScope != null
-    )
-    val metadataSharedEnabled = shouldEnableVideoMetadataSharedTransition(
-        coverSharedEnabled = coverSharedEnabled,
-        isQuickReturnLimited = CardPositionManager.shouldLimitSharedElementsForQuickReturn()
-    )
     val enterAnimationEnabledAtMount = remember(video.bvid) {
         resolveHomeCardEnterAnimationEnabledAtMount(
             baseAnimationEnabled = animationEnabled,
             isReturningFromDetail = CardPositionManager.isReturningFromDetail,
-            isSwitchingCategory = CardPositionManager.isSwitchingCategory,
-            isSharedTransitionEnabled = coverSharedEnabled
+            isSwitchingCategory = CardPositionManager.isSwitchingCategory
         )
     }
 
@@ -420,6 +407,19 @@ fun ElegantVideoCard(
         Column(
             modifier = cardContainerModifier
         ) {
+        //  尝试获取共享元素作用域
+        val sharedTransitionScope = LocalSharedTransitionScope.current
+        val animatedVisibilityScope = LocalAnimatedVisibilityScope.current
+        val coverSharedEnabled = shouldEnableVideoCoverSharedTransition(
+            transitionEnabled = transitionEnabled,
+            hasSharedTransitionScope = sharedTransitionScope != null,
+            hasAnimatedVisibilityScope = animatedVisibilityScope != null
+        )
+        val metadataSharedEnabled = shouldEnableVideoMetadataSharedTransition(
+            coverSharedEnabled = coverSharedEnabled,
+            isQuickReturnLimited = CardPositionManager.shouldLimitSharedElementsForQuickReturn()
+        )
+        
         //  封面容器 - 官方 B 站风格，支持共享元素过渡（受开关控制）
         val coverModifier = if (coverSharedEnabled) {
             with(requireNotNull(sharedTransitionScope)) {

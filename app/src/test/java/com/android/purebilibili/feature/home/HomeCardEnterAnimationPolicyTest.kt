@@ -12,8 +12,7 @@ class HomeCardEnterAnimationPolicyTest {
             resolveHomeCardEnterAnimationEnabledAtMount(
                 baseAnimationEnabled = false,
                 isReturningFromDetail = false,
-                isSwitchingCategory = false,
-                isSharedTransitionEnabled = false
+                isSwitchingCategory = false
             )
         )
     }
@@ -24,8 +23,7 @@ class HomeCardEnterAnimationPolicyTest {
             resolveHomeCardEnterAnimationEnabledAtMount(
                 baseAnimationEnabled = true,
                 isReturningFromDetail = true,
-                isSwitchingCategory = false,
-                isSharedTransitionEnabled = false
+                isSwitchingCategory = false
             )
         )
     }
@@ -36,32 +34,18 @@ class HomeCardEnterAnimationPolicyTest {
             resolveHomeCardEnterAnimationEnabledAtMount(
                 baseAnimationEnabled = true,
                 isReturningFromDetail = false,
-                isSwitchingCategory = true,
-                isSharedTransitionEnabled = false
+                isSwitchingCategory = true
             )
         )
     }
 
     @Test
-    fun sharedTransitionEnabled_disablesEnterAnimationAtMount() {
-        assertFalse(
-            resolveHomeCardEnterAnimationEnabledAtMount(
-                baseAnimationEnabled = true,
-                isReturningFromDetail = false,
-                isSwitchingCategory = false,
-                isSharedTransitionEnabled = true
-            )
-        )
-    }
-
-    @Test
-    fun normalHomeMountWithoutSharedTransition_enablesEnterAnimation() {
+    fun normalHomeMount_enablesEnterAnimation() {
         assertTrue(
             resolveHomeCardEnterAnimationEnabledAtMount(
                 baseAnimationEnabled = true,
                 isReturningFromDetail = false,
-                isSwitchingCategory = false,
-                isSharedTransitionEnabled = false
+                isSwitchingCategory = false
             )
         )
     }
