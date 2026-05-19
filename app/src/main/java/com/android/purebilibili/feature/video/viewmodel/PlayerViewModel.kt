@@ -189,15 +189,44 @@ internal fun buildPlaybackCdnFallbackState(
     selectedAudioUrl: String?,
     originalVideoUrl: String,
     originalAudioUrl: String?,
-    regionLabel: String?
+    regionLabel: String?,
+    audioFallbackUrl: String? = null
 ): PlaybackCdnFallbackState {
+    val fallbackAudioUrl = when {
+        selectedAudioUrl != originalAudioUrl -> originalAudioUrl
+        !audioFallbackUrl.isNullOrBlank() -> audioFallbackUrl
+        else -> originalAudioUrl
+    }
     return PlaybackCdnFallbackState(
         selectedVideoUrl = selectedVideoUrl,
         selectedAudioUrl = selectedAudioUrl,
         fallbackVideoUrl = originalVideoUrl.takeIf { it.isNotBlank() },
-        fallbackAudioUrl = originalAudioUrl,
+        fallbackAudioUrl = fallbackAudioUrl,
         regionLabel = regionLabel
     )
+}
+
+internal fun buildPlaybackAudioUrlCandidates(
+    audioUrl: String?,
+    cachedDashAudios: List<DashAudio>
+): List<String> {
+    val selectedAudio = audioUrl
+        ?.takeIf { it.isNotBlank() }
+        ?.let { selectedUrl ->
+            cachedDashAudios.firstOrNull { audio ->
+                audio.getValidUrl() == selectedUrl ||
+                    audio.backupUrl.orEmpty().any { backupUrl -> backupUrl == selectedUrl }
+            }
+        }
+
+    return buildList {
+        audioUrl?.takeIf { it.isNotBlank() }?.let(::add)
+        selectedAudio
+            ?.backupUrl
+            .orEmpty()
+            .filter { it.isNotBlank() }
+            .let(::addAll)
+    }.distinct()
 }
 
 internal fun shouldFallbackFromCdnRewrite(
@@ -6207,14 +6236,10 @@ class PlayerViewModel : ViewModel() {
                 ?.let { addAll(it) }
         }.distinct()
 
-        val rawAudioUrls = buildList {
-            audioUrl?.let { add(it) }
-            cachedDashAudios.firstOrNull()
-                ?.backupUrl
-                ?.filterNotNull()
-                ?.filter { it.isNotEmpty() }
-                ?.let { addAll(it) }
-        }.distinct()
+        val rawAudioUrls = buildPlaybackAudioUrlCandidates(
+            audioUrl = audioUrl,
+            cachedDashAudios = cachedDashAudios
+        )
 
         val cdnRewrite = PluginManager
             .getEnabledPlugins(PlaybackCdnPlugin::class)
@@ -6244,7 +6269,8 @@ class PlayerViewModel : ViewModel() {
                 selectedAudioUrl = selectedAudioUrl,
                 originalVideoUrl = videoUrl,
                 originalAudioUrl = audioUrl,
-                regionLabel = cdnRewrite?.regionLabel
+                regionLabel = cdnRewrite?.regionLabel,
+                audioFallbackUrl = rawAudioUrls.drop(1).firstOrNull()
             )
         )
     }
