@@ -372,12 +372,6 @@ fun AppearanceSettingsContent(
     val compactVideoStatsOnCover by SettingsManager
         .getCompactVideoStatsOnCover(context)
         .collectAsState(initial = true)
-    val homeCoverGlassBadgesVisible by SettingsManager
-        .getHomeCoverGlassBadgesVisible(context)
-        .collectAsState(initial = true)
-    val homeInfoGlassBadgesVisible by SettingsManager
-        .getHomeInfoGlassBadgesVisible(context)
-        .collectAsState(initial = true)
     val dedicatedHomeWallpaperUri by SettingsManager
         .getHomeWallpaperUri(context)
         .collectAsState(initial = "")
@@ -503,8 +497,8 @@ fun AppearanceSettingsContent(
 
                                 Spacer(modifier = Modifier.height(16.dp))
                                 IOSDivider()
-                                IOSSwitchItem(
-                                    icon = CupertinoIcons.Default.Drop,
+	                             IOSSwitchItem(
+	                                icon = rememberSettingsSemanticIcon(SettingsIconRole.ANDROID_LIQUID_GLASS),
                                     title = "安卓原生液态玻璃",
                                     subtitle = if (isLiquidGlassAvailable) {
                                         "全局启用顶部、底栏和评论区复用的液态分段控件"
@@ -579,8 +573,8 @@ fun AppearanceSettingsContent(
 
                         // 动态取色开关
                         if (showMd3DynamicColorControl) {
-                             IOSSwitchItem(
-                                icon = CupertinoIcons.Default.PaintbrushPointed,
+	                             IOSSwitchItem(
+	                                icon = rememberSettingsSemanticIcon(SettingsIconRole.DYNAMIC_COLOR),
                                 title = "动态取色（Material You）",
                                 subtitle = "跟随系统壁纸变换应用主题色",
                                 checked = state.dynamicColor,
@@ -591,8 +585,8 @@ fun AppearanceSettingsContent(
 
                         Spacer(modifier = Modifier.height(8.dp))
                         IOSDivider()
-                        ThemePresetDropdownSetting(
-                            icon = CupertinoIcons.Default.Sparkles,
+	                        ThemePresetDropdownSetting(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.COLOR_STYLE),
                             title = "色彩风格",
                             selectedLabel = selectedColorStyleLabel,
                             options = colorStyleOptions,
@@ -601,8 +595,8 @@ fun AppearanceSettingsContent(
                         )
 
                         IOSDivider()
-                        ThemePresetDropdownSetting(
-                            icon = CupertinoIcons.Default.WandAndStars,
+	                        ThemePresetDropdownSetting(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.COLOR_SPEC),
                             title = "色彩标准",
                             selectedLabel = selectedColorSpecLabel,
                             options = colorSpecOptions,
@@ -817,8 +811,8 @@ fun AppearanceSettingsContent(
 
                         Spacer(modifier = Modifier.height(16.dp))
                         IOSDivider()
-                        IOSClickableItem(
-                            icon = CupertinoIcons.Default.DocText,
+	                        IOSClickableItem(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.FONT_FILE),
                             title = "应用字体",
                             subtitle = if (state.appFontDisplayName.isBlank()) {
                                 "使用系统默认字体，或从本地导入 .ttf / .otf / .ttc"
@@ -839,8 +833,8 @@ fun AppearanceSettingsContent(
                         ) {
                             Column {
                                 IOSDivider()
-                                IOSClickableItem(
-                                    icon = CupertinoIcons.Default.ArrowCounterclockwise,
+	                                IOSClickableItem(
+	                                    icon = rememberSettingsSemanticIcon(SettingsIconRole.REPLAY_ONBOARDING),
                                     title = "恢复默认字体",
                                     subtitle = "移除已导入字体文件，立即回到系统字体",
                                     onClick = {
@@ -872,8 +866,8 @@ fun AppearanceSettingsContent(
                         IOSDivider()
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        IOSSwitchItem(
-                            icon = CupertinoIcons.Default.PaintbrushPointed,
+	                        IOSSwitchItem(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.DISPLAY_STYLE),
                             title = "应用内 DPI 覆盖",
                             subtitle = resolveDpiOverrideSubtitle(
                                 systemDensityDpi = displayMetricsSnapshot.systemDensityDpi,
@@ -938,8 +932,8 @@ fun AppearanceSettingsContent(
                     }
                     
                     // 开关项
-                    IOSSwitchItem(
-                        icon = CupertinoIcons.Default.Photo,
+	                    IOSSwitchItem(
+	                        icon = rememberSettingsSemanticIcon(SettingsIconRole.SPLASH_WALLPAPER),
                         title = "使用开屏壁纸",
                         subtitle = "应用启动时显示官方或相册壁纸",
                         checked = isSplashEnabled,
@@ -948,8 +942,8 @@ fun AppearanceSettingsContent(
                     )
 
                     IOSDivider()
-                    IOSSwitchItem(
-                        icon = CupertinoIcons.Default.Shuffle,
+	                    IOSSwitchItem(
+	                        icon = rememberSettingsSemanticIcon(SettingsIconRole.RANDOM_WALLPAPER),
                         title = "随机展示开屏壁纸",
                         subtitle = "启动时从可见官方壁纸中随机展示",
                         checked = splashRandomEnabled,
@@ -1022,8 +1016,8 @@ fun AppearanceSettingsContent(
                     }
 
                     IOSDivider()
-                    IOSSwitchItem(
-                        icon = CupertinoIcons.Default.WandAndStars,
+	                    IOSSwitchItem(
+	                        icon = rememberSettingsSemanticIcon(SettingsIconRole.ANIMATION),
                         title = "开屏图标遮罩动画",
                         subtitle = "关闭后不保留图标页，不播放遮罩和飞出动画",
                         checked = splashIconAnimationEnabled,
@@ -1127,8 +1121,8 @@ fun AppearanceSettingsContent(
             Box(modifier = Modifier.staggeredEntrance(5, isVisible, motionTier = effectiveMotionTier)) {
                 IOSGroup {
                     // 图标设置
-                    IOSClickableItem(
-                        icon = CupertinoIcons.Default.SquareStack3dUp,
+	                    IOSClickableItem(
+	                        icon = rememberSettingsSemanticIcon(SettingsIconRole.BOTTOM_BAR),
                         title = "应用图标",
                         value = when(state.appIcon) {
                             // 🎀 二次元少女系列
@@ -1151,8 +1145,8 @@ fun AppearanceSettingsContent(
                     )
                     IOSDivider()
                     // 动画设置
-                    IOSClickableItem(
-                        icon = CupertinoIcons.Default.WandAndStars,
+	                    IOSClickableItem(
+	                        icon = rememberSettingsSemanticIcon(SettingsIconRole.ANIMATION),
                         title = "动画与效果",
                         value = if (state.cardAnimationEnabled) "已开启" else "已关闭",
                         onClick = onNavigateToAnimationSettings,
@@ -1160,8 +1154,8 @@ fun AppearanceSettingsContent(
                     )
 
                     IOSDivider()
-                    IOSSwitchItem(
-                        icon = CupertinoIcons.Default.MagnifyingGlass,
+	                    IOSSwitchItem(
+	                        icon = rememberSettingsSemanticIcon(SettingsIconRole.OPEN_LINKS),
                         title = "底栏搜索入口",
                         subtitle = "在悬浮底栏右侧显示搜索入口",
                         checked = state.bottomBarSearchEnabled,
@@ -1181,8 +1175,8 @@ fun AppearanceSettingsContent(
 
                     IOSDivider()
                     // 触感反馈
-                    IOSSwitchItem(
-                        icon = CupertinoIcons.Default.HandTap,
+	                    IOSSwitchItem(
+	                        icon = rememberSettingsSemanticIcon(SettingsIconRole.FULLSCREEN_GESTURE),
                         title = "触感反馈",
                         checked = state.hapticFeedbackEnabled,
                         onCheckedChange = { viewModel.toggleHapticFeedback(it) },
@@ -1228,8 +1222,8 @@ fun AppearanceSettingsContent(
                                     .padding(vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    CupertinoIcons.Default.SquareOnSquare,
+	                                Icon(
+	                                    rememberSettingsSemanticIcon(SettingsIconRole.DISPLAY_STYLE),
                                     contentDescription = null,
                                     tint = displayModeTint,
                                     modifier = Modifier.size(24.dp)
@@ -1312,7 +1306,7 @@ fun AppearanceSettingsContent(
                         
                         IOSDivider(modifier = Modifier.padding(start = 16.dp))
                         IOSSwitchItem(
-                            icon = CupertinoIcons.Default.SquareOnSquare,
+                            icon = rememberSettingsSemanticIcon(SettingsIconRole.DISPLAY_STYLE),
                             title = "统计信息贴封面（紧凑）",
                             subtitle = if (compactVideoStatsOnCover) {
                                 "播放量和评论数显示在封面底部，缩小卡片间距"
@@ -1330,25 +1324,7 @@ fun AppearanceSettingsContent(
 
                         IOSDivider(modifier = Modifier.padding(start = 16.dp))
                         IOSSwitchItem(
-                            icon = CupertinoIcons.Default.PlayCircle,
-                            title = "封面玻璃样式",
-                            subtitle = if (homeCoverGlassBadgesVisible) {
-                                "封面的播放量、评论量、时长和竖屏标记使用玻璃胶囊"
-                            } else {
-                                "封面信息继续显示，但不使用玻璃胶囊"
-                            },
-                            checked = homeCoverGlassBadgesVisible,
-                            onCheckedChange = {
-                                scope.launch {
-                                    SettingsManager.setHomeCoverGlassBadgesVisible(context, it)
-                                }
-                            },
-                            iconTint = com.android.purebilibili.core.theme.iOSOrange
-                        )
-
-                        IOSDivider(modifier = Modifier.padding(start = 16.dp))
-                        IOSSwitchItem(
-                            icon = CupertinoIcons.Default.Clock,
+                            icon = rememberSettingsSemanticIcon(SettingsIconRole.VIDEO_DURATION_BADGES),
                             title = "首页视频时长",
                             subtitle = if (homeVideoDurationBadgesVisible) {
                                 "推荐视频封面右下角显示时长"
@@ -1362,24 +1338,6 @@ fun AppearanceSettingsContent(
                                 }
                             },
                             iconTint = com.android.purebilibili.core.theme.iOSGreen
-                        )
-
-                        IOSDivider(modifier = Modifier.padding(start = 16.dp))
-                        IOSSwitchItem(
-                            icon = CupertinoIcons.Default.Tag,
-                            title = "信息区玻璃样式",
-                            subtitle = if (homeInfoGlassBadgesVisible) {
-                                "已关注和次级统计使用玻璃标签"
-                            } else {
-                                "信息区信息继续显示，但不使用玻璃标签"
-                            },
-                            checked = homeInfoGlassBadgesVisible,
-                            onCheckedChange = {
-                                scope.launch {
-                                    SettingsManager.setHomeInfoGlassBadgesVisible(context, it)
-                                }
-                            },
-                            iconTint = com.android.purebilibili.core.theme.iOSPurple
                         )
 
                         IOSDivider(modifier = Modifier.padding(start = 16.dp))
@@ -1412,8 +1370,8 @@ fun AppearanceSettingsContent(
                                         modifier = Modifier.fillMaxSize(),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Icon(
-                                            CupertinoIcons.Default.Photo,
+	                                        Icon(
+	                                            rememberSettingsSemanticIcon(SettingsIconRole.HOME_WALLPAPER),
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.size(24.dp)
@@ -1499,8 +1457,8 @@ fun AppearanceSettingsContent(
                         }
 
                         IOSDivider(modifier = Modifier.padding(start = 16.dp))
-                        IOSSwitchItem(
-                            icon = CupertinoIcons.Default.PersonCropCircleBadgePlus,
+	                        IOSSwitchItem(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.HOME_UP_BADGES),
                             title = "UP主标识",
                             subtitle = if (homeUpBadgesVisible) {
                                 "首页和相关推荐显示 UP 标识"
@@ -1517,8 +1475,8 @@ fun AppearanceSettingsContent(
                         )
 
                         IOSDivider(modifier = Modifier.padding(start = 16.dp))
-                        IOSSwitchItem(
-                            icon = CupertinoIcons.Default.ChartBar,
+	                        IOSSwitchItem(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.ONLINE_COUNT),
                             title = "卡片与视频页观看人数",
                             subtitle = if (showOnlineCount) {
                                 "首页、搜索等视频卡片和视频页显示“xx人正在看”"

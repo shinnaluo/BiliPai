@@ -512,8 +512,6 @@ fun SearchScreen(
     val liquidGlassEnabled by SettingsManager.getLiquidGlassEnabled(context).collectAsState(initial = true)
     val headerBlurEnabled by SettingsManager.getHeaderBlurEnabled(context).collectAsState(initial = true)
     val bottomBarBlurEnabled by SettingsManager.getBottomBarBlurEnabled(context).collectAsState(initial = true)
-    val showHomeCoverGlassBadges by SettingsManager.getHomeCoverGlassBadgesVisible(context).collectAsState(initial = true)
-    val showHomeInfoGlassBadges by SettingsManager.getHomeInfoGlassBadgesVisible(context).collectAsState(initial = true)
     val cardMotionTier = resolveEffectiveMotionTier(
         baseTier = deviceUiProfile.motionTier,
         animationEnabled = cardAnimationEnabled
@@ -526,15 +524,13 @@ fun SearchScreen(
     }
     val videoCardAppearance = remember(
         liquidGlassEnabled,
-        searchCardBlurEnabled,
-        showHomeCoverGlassBadges,
-        showHomeInfoGlassBadges
+        searchCardBlurEnabled
     ) {
         resolveSearchVideoCardAppearance(
             liquidGlassEnabled = liquidGlassEnabled,
             blurEnabled = searchCardBlurEnabled,
-            showHomeCoverGlassBadges = showHomeCoverGlassBadges,
-            showHomeInfoGlassBadges = showHomeInfoGlassBadges
+            showHomeCoverGlassBadges = false,
+            showHomeInfoGlassBadges = false
         )
     }
     val genericResultCardAppearance = remember(liquidGlassEnabled, uiPreset) {

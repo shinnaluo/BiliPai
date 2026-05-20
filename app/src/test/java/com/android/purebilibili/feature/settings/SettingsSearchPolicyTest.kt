@@ -75,6 +75,19 @@ class SettingsSearchPolicyTest {
     }
 
     @Test
+    fun queryByRetiredHomeGlassBadges_returnsNoSettingsResult() {
+        val results = resolveSettingsSearchResults("封面玻璃样式") +
+            resolveSettingsSearchResults("信息区玻璃样式")
+
+        assertTrue(
+            results.none {
+                it.target == SettingsSearchTarget.APPEARANCE &&
+                    it.focusId == SettingsSearchFocusIds.APPEARANCE_HOME
+            }
+        )
+    }
+
+    @Test
     fun queryByMd3Alias_hitsAppearanceEntry() {
         val results = resolveSettingsSearchResults("md3")
 

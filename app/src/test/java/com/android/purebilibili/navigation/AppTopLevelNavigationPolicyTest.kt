@@ -345,6 +345,52 @@ class AppTopLevelNavigationPolicyTest {
     }
 
     @Test
+    fun bottomTabNavigation_setsTransitionTargetOnlyForVisibleTopLevelTabs() {
+        val visibleRoutes = setOf(
+            ScreenRoutes.Home.route,
+            ScreenRoutes.Dynamic.route,
+            ScreenRoutes.History.route,
+            ScreenRoutes.Profile.route
+        )
+
+        assertEquals(
+            ScreenRoutes.Profile.route,
+            resolveBottomTabTransitionTargetRoute(
+                currentRoute = ScreenRoutes.Home.route,
+                targetRoute = ScreenRoutes.Profile.route,
+                visibleBottomBarRoutes = visibleRoutes
+            )
+        )
+        assertNull(
+            resolveBottomTabTransitionTargetRoute(
+                currentRoute = VideoRoute.route,
+                targetRoute = ScreenRoutes.Profile.route,
+                visibleBottomBarRoutes = visibleRoutes
+            )
+        )
+        assertNull(
+            resolveBottomTabTransitionTargetRoute(
+                currentRoute = ScreenRoutes.Home.route,
+                targetRoute = ScreenRoutes.Search.route,
+                visibleBottomBarRoutes = visibleRoutes
+            )
+        )
+    }
+
+    @Test
+    fun appNavigationUsesRealBottomTabTransitionStateForRenderBudget() {
+        val sourceFile = listOf(
+            File("app/src/main/java/com/android/purebilibili/navigation/AppNavigation.kt"),
+            File("src/main/java/com/android/purebilibili/navigation/AppNavigation.kt")
+        ).first { it.exists() }
+        val source = sourceFile.readText()
+
+        assertTrue(source.contains("pendingBottomTabTransitionRoute"))
+        assertTrue(source.contains("resolveBottomPagerRenderBudget(isNavigating = pendingBottomTabTransitionRoute != null)"))
+        assertFalse(source.contains("remember { resolveBottomPagerRenderBudget(isNavigating = false) }"))
+    }
+
+    @Test
     fun routeMatchingVisibleBottomItem_selectsThatItem() {
         assertEquals(
             BottomNavItem.HISTORY,

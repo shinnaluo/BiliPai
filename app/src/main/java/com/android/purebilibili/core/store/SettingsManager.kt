@@ -376,8 +376,8 @@ data class HomeSettings(
     val smartVisualGuardEnabled: Boolean = false, // [Retired] 智能流畅优先已下线，固定关闭
     val compactVideoStatsOnCover: Boolean = true, //  播放量/评论数显示在封面底部（默认开启）
     val lowQualityHomeCoverInDataSaver: Boolean = false, // 省流量时首页封面使用低清晰度
-    val showHomeCoverGlassBadges: Boolean = true, // 首页封面玻璃信息显示
-    val showHomeInfoGlassBadges: Boolean = true, // 首页信息区玻璃标签显示
+    val showHomeCoverGlassBadges: Boolean = false, // 首页封面玻璃标签已退役
+    val showHomeInfoGlassBadges: Boolean = false, // 首页信息区玻璃标签已退役
     val homeWallpaperEffectMode: HomeWallpaperEffectMode = HomeWallpaperEffectMode.SOFT_BLUR,
     val homeWallpaperEffectScope: HomeWallpaperEffectScope = HomeWallpaperEffectScope.HOME_ONLY,
     val showHomeUpBadges: Boolean = true, // 首页和相关推荐 UP 主标识显示
@@ -976,8 +976,8 @@ object SettingsManager {
             compactVideoStatsOnCover = preferences[KEY_COMPACT_VIDEO_STATS_ON_COVER] ?: true,
             lowQualityHomeCoverInDataSaver =
                 preferences[KEY_LOW_QUALITY_HOME_COVER_IN_DATA_SAVER] ?: false,
-            showHomeCoverGlassBadges = preferences[KEY_HOME_COVER_GLASS_BADGES_VISIBLE] ?: true,
-            showHomeInfoGlassBadges = preferences[KEY_HOME_INFO_GLASS_BADGES_VISIBLE] ?: true,
+            showHomeCoverGlassBadges = false,
+            showHomeInfoGlassBadges = false,
             homeWallpaperEffectMode = HomeWallpaperEffectMode.fromValue(
                 preferences[KEY_HOME_WALLPAPER_EFFECT_MODE] ?: HomeWallpaperEffectMode.SOFT_BLUR.value
             ),
@@ -3784,8 +3784,10 @@ object SettingsManager {
     // ==========  隐私无痕模式 ==========
     
     private val KEY_PRIVACY_MODE_ENABLED = booleanPreferencesKey("privacy_mode_enabled")
+    private val KEY_PRIVACY_CONTENT_AUTHENTICATION_ENABLED =
+        booleanPreferencesKey("privacy_content_authentication_enabled")
     
-    // --- 隐私无痕模式开关 (启用后不记录播放历史和搜索历史) ---
+    // --- 不记录播放历史和搜索历史 ---
     fun getPrivacyModeEnabled(context: Context): Flow<Boolean> = context.settingsDataStore.data
         .map { preferences -> preferences[KEY_PRIVACY_MODE_ENABLED] ?: false }  // 默认关闭
 
@@ -3800,6 +3802,16 @@ object SettingsManager {
     fun isPrivacyModeEnabledSync(context: Context): Boolean {
         return context.getSharedPreferences("privacy_mode", Context.MODE_PRIVATE)
             .getBoolean("enabled", false)
+    }
+
+    // --- 进入收藏、历史等隐私内容前使用系统认证 ---
+    fun getPrivacyContentAuthenticationEnabled(context: Context): Flow<Boolean> = context.settingsDataStore.data
+        .map { preferences -> preferences[KEY_PRIVACY_CONTENT_AUTHENTICATION_ENABLED] ?: false }
+
+    suspend fun setPrivacyContentAuthenticationEnabled(context: Context, value: Boolean) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[KEY_PRIVACY_CONTENT_AUTHENTICATION_ENABLED] = value
+        }
     }
     
     // ==========  小窗播放模式 ==========

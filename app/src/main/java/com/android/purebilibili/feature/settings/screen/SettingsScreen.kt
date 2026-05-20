@@ -106,6 +106,9 @@ fun SettingsScreen(
     // State Collection
     val state by viewModel.state.collectAsState()
     val privacyModeEnabled by SettingsManager.getPrivacyModeEnabled(context).collectAsState(initial = false)
+    val privacyContentAuthenticationEnabled by SettingsManager
+        .getPrivacyContentAuthenticationEnabled(context)
+        .collectAsState(initial = false)
     val crashTrackingEnabled by SettingsManager.getCrashTrackingEnabled(context)
         .collectAsState(initial = DEFAULT_CRASH_TRACKING_ENABLED)
     val analyticsEnabled by SettingsManager.getAnalyticsEnabled(context)
@@ -254,6 +257,9 @@ fun SettingsScreen(
     // Logic Callbacks
     val onPrivacyModeChange: (Boolean) -> Unit = { enabled ->
         scope.launch { SettingsManager.setPrivacyModeEnabled(context, enabled) }
+    }
+    val onPrivacyContentAuthenticationChange: (Boolean) -> Unit = { enabled ->
+        scope.launch { SettingsManager.setPrivacyContentAuthenticationEnabled(context, enabled) }
     }
     val onCrashTrackingChange: (Boolean) -> Unit = { enabled ->
         scope.launch {
@@ -905,6 +911,7 @@ fun SettingsScreen(
                     onDownloadPathClick = onDownloadPathAction,
                     onClearCacheClick = onClearCacheAction,
                     onPrivacyModeChange = onPrivacyModeChange,
+                    onPrivacyContentAuthenticationChange = onPrivacyContentAuthenticationChange,
                     onCrashTrackingChange = onCrashTrackingChange,
                     onAnalyticsChange = onAnalyticsChange,
                     onEasterEggChange = onEasterEggChange,
@@ -922,6 +929,7 @@ fun SettingsScreen(
                     updateStatusText = updateStatusText,
                     isCheckingUpdate = isCheckingUpdate,
                     autoCheckUpdateEnabled = autoCheckUpdateEnabled,
+                    privacyContentAuthenticationEnabled = privacyContentAuthenticationEnabled,
                     verificationLabel = buildVerificationLabel,
                     verificationSubtitle = buildVerificationState.summary,
                     buildSourceValue = buildSourceValue,
@@ -1003,6 +1011,7 @@ fun SettingsScreen(
                     onDownloadPathClick = onDownloadPathAction,
                     onClearCacheClick = onClearCacheAction,
                     onPrivacyModeChange = onPrivacyModeChange,
+                    onPrivacyContentAuthenticationChange = onPrivacyContentAuthenticationChange,
                     onCrashTrackingChange = onCrashTrackingChange,
                     onAnalyticsChange = onAnalyticsChange,
                     onEasterEggChange = onEasterEggChange,
@@ -1020,6 +1029,7 @@ fun SettingsScreen(
                     updateStatusText = updateStatusText,
                     isCheckingUpdate = isCheckingUpdate,
                     autoCheckUpdateEnabled = autoCheckUpdateEnabled,
+                    privacyContentAuthenticationEnabled = privacyContentAuthenticationEnabled,
                     verificationLabel = buildVerificationLabel,
                     verificationSubtitle = buildVerificationState.summary,
                     buildSourceValue = buildSourceValue,
@@ -1141,6 +1151,7 @@ private fun MobileSettingsLayout(
     
     // Logic Callbacks
     onPrivacyModeChange: (Boolean) -> Unit,
+    onPrivacyContentAuthenticationChange: (Boolean) -> Unit,
     onCrashTrackingChange: (Boolean) -> Unit,
     onAnalyticsChange: (Boolean) -> Unit,
     onEasterEggChange: (Boolean) -> Unit,
@@ -1148,6 +1159,7 @@ private fun MobileSettingsLayout(
     
     // State
     privacyModeEnabled: Boolean,
+    privacyContentAuthenticationEnabled: Boolean,
     customDownloadPath: String?,
     cacheSize: String,
     crashTrackingEnabled: Boolean,
@@ -1233,6 +1245,7 @@ private fun MobileSettingsLayout(
         onTipsClick = onTipsClick,
         onOpenLinksClick = onOpenLinksClick,
         onPrivacyModeChange = onPrivacyModeChange,
+        onPrivacyContentAuthenticationChange = onPrivacyContentAuthenticationChange,
         onCrashTrackingChange = onCrashTrackingChange,
         onAnalyticsChange = onAnalyticsChange,
         onEasterEggChange = onEasterEggChange,
@@ -1245,6 +1258,7 @@ private fun MobileSettingsLayout(
     )
     val rootCategoryState = SettingsRootCategoryState(
         privacyModeEnabled = privacyModeEnabled,
+        privacyContentAuthenticationEnabled = privacyContentAuthenticationEnabled,
         crashTrackingEnabled = crashTrackingEnabled,
         analyticsEnabled = analyticsEnabled,
         pluginCount = pluginCount,

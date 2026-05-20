@@ -145,6 +145,11 @@ import androidx.compose.foundation.layout.fillMaxSize // 确保 fillMaxSize 被�
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
 import com.android.purebilibili.feature.home.components.FrostedSideBar
+import com.android.purebilibili.feature.privacy.PrivacyAuthenticationReason
+import com.android.purebilibili.feature.privacy.PrivacyAuthenticationRequest
+import com.android.purebilibili.feature.privacy.PrivacyAuthenticationResult
+import com.android.purebilibili.feature.privacy.PrivacyNavigationTarget
+import com.android.purebilibili.feature.privacy.shouldRequirePrivacyAuthentication
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -222,6 +227,19 @@ internal fun resolveStandardVideoRoute(
     )
 }
 
+private fun BiliPaiNavKey.toPrivacyNavigationTarget(): PrivacyNavigationTarget {
+    return when (this) {
+        is BiliPaiNavKey.SeasonSeriesDetail -> PrivacyNavigationTarget(
+            routeBase = routeBase,
+            seasonSeriesType = type
+        )
+        is BiliPaiNavKey.Unknown -> PrivacyNavigationTarget(
+            routeBase = route.substringBefore("?")
+        )
+        else -> PrivacyNavigationTarget(routeBase = routeBase)
+    }
+}
+
 @androidx.media3.common.util.UnstableApi
 // @OptIn(ExperimentalMaterial3WindowSizeClassApi::class) (Removed)
 @Composable
@@ -243,6 +261,12 @@ fun AppNavigation(
     onVideoDetailExit: () -> Unit = {},
     onAudioModeEnter: () -> Unit = {},
     onAudioModeExit: () -> Unit = {},
+    onPrivacyAuthenticationRequired: (
+        PrivacyAuthenticationRequest,
+        (PrivacyAuthenticationResult) -> Unit
+    ) -> Unit = { _, onResult ->
+        onResult(PrivacyAuthenticationResult.Failure("请先设置系统锁屏后再解锁隐私内容"))
+    },
     mainHazeState: dev.chrisbanes.haze.HazeState? = null //  全局 Haze 状态
 ) {
     val homeViewModel: HomeViewModel = viewModel()
@@ -255,6 +279,13 @@ fun AppNavigation(
     val settingsViewModel: SettingsViewModel = viewModel(
         factory = remember(application) { SettingsViewModelFactory(application) }
     )
+    val privacyAuthenticationEnabled by SettingsManager.getPrivacyContentAuthenticationEnabled(context).collectAsState(initial = false)
+    var privacySessionUnlocked by remember { mutableStateOf(false) }
+    LaunchedEffect(privacyAuthenticationEnabled) {
+        if (!privacyAuthenticationEnabled) {
+            privacySessionUnlocked = false
+        }
+    }
     val uriHandler = LocalUriHandler.current
     val downloadTasks by com.android.purebilibili.feature.download.DownloadManager.tasks.collectAsState()
     val uiPreset = LocalUiPreset.current
@@ -394,7 +425,9 @@ fun AppNavigation(
             visibleBottomBarItems.map { it.route }.toSet()
         }
         var retainedBottomNavItem by rememberSaveable { mutableStateOf(BottomNavItem.HOME) }
-        val bottomPagerRenderBudget = remember { resolveBottomPagerRenderBudget(isNavigating = false) }
+        var pendingBottomTabTransitionRoute by remember { mutableStateOf<String?>(null) }
+        val bottomPagerRenderBudget =
+            resolveBottomPagerRenderBudget(isNavigating = pendingBottomTabTransitionRoute != null)
         val currentBottomNavItem = remember(
             currentRoute,
             retainedBottomNavItem,
@@ -410,6 +443,22 @@ fun AppNavigation(
             val routeBase = currentRoute?.substringBefore("?")
             if (routeBase == ScreenRoutes.Home.route || routeBase in visibleBottomBarRoutes) {
                 retainedBottomNavItem = currentBottomNavItem
+            }
+        }
+        LaunchedEffect(currentRoute, pendingBottomTabTransitionRoute, visibleBottomBarRoutes) {
+            val pendingRoute = pendingBottomTabTransitionRoute ?: return@LaunchedEffect
+            val currentRouteBase = currentRoute?.substringBefore("?")
+            val pendingRouteBase = pendingRoute.substringBefore("?")
+            when {
+                currentRouteBase == pendingRouteBase -> {
+                    kotlinx.coroutines.delay(BOTTOM_TAB_RENDER_BUDGET_HOLD_MILLIS)
+                    if (pendingBottomTabTransitionRoute == pendingRoute) {
+                        pendingBottomTabTransitionRoute = null
+                    }
+                }
+                currentRouteBase != null && currentRouteBase !in visibleBottomBarRoutes -> {
+                    pendingBottomTabTransitionRoute = null
+                }
             }
         }
 
@@ -463,11 +512,39 @@ fun AppNavigation(
                 CardPositionManager.lastClickedVideoSourceKey == navigation3ReturnSession.lastVideoSourceKey,
             cardFullyVisible = CardPositionManager.isCardFullyVisible
         )
-        fun pushNavigation3Key(key: BiliPaiNavKey) {
+        fun pushNavigation3KeyDirect(key: BiliPaiNavKey) {
             navigation3BackStack = pushBiliPaiNavKey(
                 currentStack = navigation3BackStack,
                 key = key
             )
+        }
+        fun pushNavigation3Key(key: BiliPaiNavKey, beforeNavigation: (() -> Unit)? = null) {
+            val target = key.toPrivacyNavigationTarget()
+            if (
+                shouldRequirePrivacyAuthentication(
+                    privacyAuthenticationEnabled = privacyAuthenticationEnabled,
+                    privacySessionUnlocked = privacySessionUnlocked,
+                    target = target
+                )
+            ) {
+                onPrivacyAuthenticationRequired(
+                    PrivacyAuthenticationRequest(PrivacyAuthenticationReason.OPEN_PRIVACY_CONTENT)
+                ) { result ->
+                    when (result) {
+                        PrivacyAuthenticationResult.Success -> {
+                            privacySessionUnlocked = true
+                            beforeNavigation?.invoke()
+                            pushNavigation3KeyDirect(key)
+                        }
+                        is PrivacyAuthenticationResult.Failure -> {
+                            android.widget.Toast.makeText(context, result.message, android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } else {
+                beforeNavigation?.invoke()
+                pushNavigation3KeyDirect(key)
+            }
         }
         fun replaceNavigation3TopWithKey(key: BiliPaiNavKey) {
             navigation3BackStack = pushBiliPaiNavKey(
@@ -477,8 +554,7 @@ fun AppNavigation(
         }
         fun pushNavigation3Route(route: String, beforeNavigation: (() -> Unit)? = null) {
             if (!canNavigate(shouldBypassNavigationDebounceForRoute(route))) return
-            beforeNavigation?.invoke()
-            pushNavigation3Key(legacyRouteToBiliPaiNavKey(route))
+            pushNavigation3Key(legacyRouteToBiliPaiNavKey(route), beforeNavigation)
         }
         fun navigateToVideoRouteInNavigation3(route: String, sourceRoute: String?) {
             if (!canNavigate(false)) return
@@ -676,6 +752,11 @@ fun AppNavigation(
         val handleNavItemClick: (BottomNavItem) -> Unit = { item ->
             when (resolveBottomBarSelectionAction(currentBottomNavItem, item)) {
                 BottomBarSelectionAction.NAVIGATE -> {
+                    pendingBottomTabTransitionRoute = resolveBottomTabTransitionTargetRoute(
+                        currentRoute = currentRoute,
+                        targetRoute = item.route,
+                        visibleBottomBarRoutes = visibleBottomBarRoutes
+                    )
                     pushNavigation3Route(item.route)
                 }
                 BottomBarSelectionAction.RESELECT -> when (item) {
@@ -933,7 +1014,8 @@ fun AppNavigation(
                     sourceMetadata = navigation3SourceMetadata,
                     onBack = { performSystemBackAction() },
                     modifier = Modifier.fillMaxSize(),
-                    sharedTransitionScope = LocalSharedTransitionScope.current
+                    sharedTransitionScope = LocalSharedTransitionScope.current,
+                    visibleBottomBarRoutes = visibleBottomBarRoutes
                 ) { key ->
                     CompositionLocalProvider(
                         LocalVideoCardReturnTransitionState provides VideoCardReturnTransitionState(

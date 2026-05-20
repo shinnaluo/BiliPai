@@ -328,12 +328,19 @@ internal class DampedDragAnimationState(
             pressJob = launch {
                 pressProgressAnimation.animateTo(1f, motionSpec.drag.pressSpring.toSpringSpec())
             }
-            animatable.animateTo(
-                targetValue = index.toFloat(),
-                animationSpec = motionSpec.drag.selectionSpring.toSpringSpec()
-            )
-            pressJob?.cancel()
-            pressJob = launch {
+            val releaseTargetValue = index.toFloat()
+            launch {
+                animatable.animateTo(
+                    targetValue = releaseTargetValue,
+                    animationSpec = motionSpec.drag.selectionSpring.toSpringSpec()
+                )
+            }
+            launch {
+                // 对齐 KSU：切换动画接近目标后释放按压形变，而不是等弹簧完全静止。
+                val threshold = ((itemCount - 1).toFloat() * 0.025f).coerceAtLeast(0.001f)
+                snapshotFlow { animatable.value }
+                    .filter { abs(it - releaseTargetValue) < threshold }
+                    .first()
                 pressProgressAnimation.animateTo(0f, motionSpec.drag.pressSpring.toSpringSpec())
             }
         }

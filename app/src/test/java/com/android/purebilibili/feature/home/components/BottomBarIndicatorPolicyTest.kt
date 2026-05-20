@@ -162,6 +162,50 @@ class BottomBarIndicatorPolicyTest {
     }
 
     @Test
+    fun `transitioning bottom pager allows indicator backdrop only for click pulse`() {
+        assertTrue(
+            shouldRenderBottomBarIndicatorBackdrop(
+                glassEnabled = true,
+                hasContentBackdrop = true,
+                indicatorProgress = 1f,
+                isTransitionRunning = true,
+                isBottomBarInteractionActive = true,
+                allowTransitionIndicatorPulse = true
+            )
+        )
+        assertFalse(
+            shouldRenderBottomBarRefractionCapture(
+                glassEnabled = true,
+                hasBackdrop = true,
+                captureProgress = 1f,
+                isTransitionRunning = true,
+                isBottomBarInteractionActive = true
+            )
+        )
+    }
+
+    @Test
+    fun `indicator click settle pulse reuses indicator layer transform scale`() {
+        val pressed = resolveBottomBarIndicatorLayerTransform(
+            motionProgress = 1f,
+            velocityItemsPerSecond = 0f,
+            isDragging = false,
+            dragScaleProgress = 1f
+        )
+        val settled = resolveBottomBarIndicatorLayerTransform(
+            motionProgress = 0f,
+            velocityItemsPerSecond = 0f,
+            isDragging = false,
+            dragScaleProgress = 0f
+        )
+
+        assertTrue(pressed.scaleX >= 1.35f)
+        assertEquals(pressed.scaleX, pressed.scaleY)
+        assertEquals(1f, settled.scaleX)
+        assertEquals(1f, settled.scaleY)
+    }
+
+    @Test
     fun `idle bottom bar does not render hidden capture or indicator backdrop`() {
         assertFalse(
             shouldRenderBottomBarRefractionCapture(
@@ -527,8 +571,8 @@ class BottomBarIndicatorPolicyTest {
             motionSpec = resolveBottomBarMotionSpec(BottomBarMotionProfile.ANDROID_NATIVE_FLOATING)
         )
 
-        assertTrue(transform.scaleX > 1.5f)
-        assertTrue(transform.scaleY > 1.5f)
+        assertTrue(transform.scaleX > 1.35f)
+        assertTrue(transform.scaleY > 1.35f)
     }
 
     @Test
@@ -554,8 +598,8 @@ class BottomBarIndicatorPolicyTest {
 
         assertEquals(full.scaleX, partial.scaleX, 0.001f)
         assertEquals(full.scaleY, partial.scaleY, 0.001f)
-        assertTrue(partial.scaleX > 1.5f)
-        assertTrue(partial.scaleY > 1.5f)
+        assertTrue(partial.scaleX > 1.35f)
+        assertTrue(partial.scaleY > 1.35f)
         assertTrue(deformed.scaleX > partial.scaleX)
         assertTrue(deformed.scaleY < partial.scaleY)
     }
@@ -592,7 +636,7 @@ class BottomBarIndicatorPolicyTest {
         )
 
         assertTrue(settling.scaleX > 1f)
-        assertTrue(settling.scaleX < full.scaleX)
+        assertTrue(settling.scaleX > full.scaleX)
         assertTrue(settling.scaleX > settling.scaleY)
         assertTrue(settling.scaleY > 1f)
     }

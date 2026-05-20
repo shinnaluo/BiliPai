@@ -568,11 +568,13 @@ internal fun shouldRenderBottomBarIndicatorBackdrop(
     indicatorProgress: Float,
     isTransitionRunning: Boolean = false,
     isBottomBarInteractionActive: Boolean = false,
-    allowIdleGlassEffect: Boolean = false
+    allowIdleGlassEffect: Boolean = false,
+    allowTransitionIndicatorPulse: Boolean = false
 ): Boolean {
     if (!glassEnabled || !hasContentBackdrop) return false
-    if (isTransitionRunning) return false
+    if (isTransitionRunning && !allowTransitionIndicatorPulse) return false
     if (allowIdleGlassEffect && indicatorProgress > BottomBarTransientAlphaThreshold) return true
+    if (allowTransitionIndicatorPulse && indicatorProgress > BottomBarTransientAlphaThreshold) return true
     return shouldRenderBottomBarHeavyInteractiveEffects(
         isTransitionRunning = isTransitionRunning,
         isBottomBarInteractionActive = isBottomBarInteractionActive,
@@ -960,7 +962,7 @@ internal data class BottomBarIndicatorVisualPolicy(
 )
 
 internal const val BOTTOM_BAR_REFRACTION_IDLE_HOLD_MS = 96L
-private const val BOTTOM_BAR_INDICATOR_DRAG_SCALE_TARGET = 88f / 56f
+private const val BOTTOM_BAR_INDICATOR_DRAG_SCALE_TARGET = 78f / 56f
 
 internal fun resolveBottomBarIndicatorVisualPolicyWithHold(
     basePolicy: BottomBarIndicatorVisualPolicy,
@@ -2407,7 +2409,6 @@ private fun KernelSuAlignedBottomBar(
         }
     }
     val selectedIndex = visibleItems.indexOf(currentItem).coerceAtLeast(0)
-    val homeIndex = visibleItems.indexOf(BottomNavItem.HOME)
     val isValidSelection = currentItem in visibleItems
     val isDarkTheme = isSystemInDarkTheme()
     val baseSelectedColor = MaterialTheme.colorScheme.primary
@@ -2481,8 +2482,6 @@ private fun KernelSuAlignedBottomBar(
         mutableStateOf(BottomBarSearchExpansionOverride.FOLLOW_AUTO)
     }
     var searchQuery by remember { mutableStateOf("") }
-    var homeClickPulseKey by remember { mutableIntStateOf(0) }
-    val homeClickPulseTransform = rememberBottomBarClickPulseTransform(homeClickPulseKey)
     val searchLaunchSpec = remember { resolveBottomBarSearchLaunchTransitionSpec() }
     val searchLaunchProgressState = remember { Animatable(0f) }
     val searchLaunchProgress = searchLaunchProgressState.value
@@ -2693,17 +2692,23 @@ private fun KernelSuAlignedBottomBar(
             )
             val effectiveCaptureProgress = backdropPresetProgress.captureProgress
             val effectiveIndicatorProgress = backdropPresetProgress.indicatorProgress
+            val isBottomBarPressActive =
+                dampedDragState.pressProgress > BottomBarTransientAlphaThreshold
+            val effectiveIndicatorEffectProgress = maxOf(
+                effectiveIndicatorProgress,
+                dampedDragState.pressProgress
+            )
             val captureLensSpec = resolveBottomBarBackdropPresetCaptureLens(
                 progress = effectiveCaptureProgress
             )
             val indicatorLensSpec = resolveBottomBarBackdropPresetIndicatorLens(
-                progress = effectiveIndicatorProgress
+                progress = effectiveIndicatorEffectProgress
             )
             val captureHighlightAlpha = resolveBottomBarLiquidGlassHighlightAlpha(
                 effectiveCaptureProgress
             )
             val indicatorHighlightAlpha = resolveBottomBarLiquidGlassHighlightAlpha(
-                effectiveIndicatorProgress
+                effectiveIndicatorEffectProgress
             )
             val indicatorReadabilitySurfaceColor = Color.Transparent
             val indicatorGlowAlpha = resolveBottomBarIndicatorGlowAlpha(
@@ -2725,11 +2730,15 @@ private fun KernelSuAlignedBottomBar(
             val shouldRenderIndicatorBackdrop = shouldRenderBottomBarIndicatorBackdrop(
                 glassEnabled = glassEnabled,
                 hasContentBackdrop = backdrop != null,
-                indicatorProgress = effectiveIndicatorProgress,
+                indicatorProgress = effectiveIndicatorEffectProgress,
                 isTransitionRunning = isTransitionRunning,
                 isBottomBarInteractionActive = isBottomBarInteractionActive,
-                allowIdleGlassEffect = false
+                allowIdleGlassEffect = false,
+                allowTransitionIndicatorPulse = isBottomBarPressActive
             )
+            val shouldRenderIndicatorContentCapture =
+                shouldComposeDockContent &&
+                    (shouldRenderRefractionCapture || isBottomBarPressActive)
             val contentBackdrop = if (shouldRenderIndicatorBackdrop && backdrop != null) {
                 rememberCombinedBackdrop(backdrop, tabsBackdrop)
             } else {
@@ -2765,7 +2774,7 @@ private fun KernelSuAlignedBottomBar(
                     selectedColor = itemSelectedColor,
                     themeWeight = coverage,
                     glassEnabled = glassEnabled,
-                    indicatorProgress = effectiveIndicatorProgress,
+                    indicatorProgress = effectiveIndicatorEffectProgress,
                     indicatorBackdropEnabled = shouldRenderIndicatorBackdrop
                 )
             }
@@ -2773,12 +2782,17 @@ private fun KernelSuAlignedBottomBar(
             fun exportItemContentColor(
                 item: BottomNavItem?,
                 coverage: Float
-            ): Color = resolveBottomBarGlassExportContentColor(
-                unselectedColor = unselectedColor,
-                selectedColor = selectedContentColor(item),
-                themeWeight = coverage,
-                glassEnabled = glassEnabled
-            )
+            ): Color {
+                if (isBottomBarPressActive && item != null) {
+                    return selectedContentColor(item)
+                }
+                return resolveBottomBarGlassExportContentColor(
+                    unselectedColor = unselectedColor,
+                    selectedColor = selectedContentColor(item),
+                    themeWeight = coverage,
+                    glassEnabled = glassEnabled
+                )
+            }
 
             fun itemScale(coverage: Float): Float = if (glassEnabled) {
                 resolveBottomBarItemMotionScale(
@@ -2875,8 +2889,7 @@ private fun KernelSuAlignedBottomBar(
                                 onClick = {},
                                 interactive = false,
                                 selectedIconAlpha = coverage,
-                                scale = itemScale(coverage),
-                                clickPulseKey = if (item == BottomNavItem.HOME) homeClickPulseKey else 0
+                                scale = 1f
                             )
                         }
 
@@ -2899,13 +2912,13 @@ private fun KernelSuAlignedBottomBar(
                                 onClick = {},
                                 interactive = false,
                                 selectedIconAlpha = coverage,
-                                scale = itemScale(coverage)
+                                scale = 1f
                             )
                         }
                     }
                 }
 
-                if (shouldRenderRefractionCapture && backdrop != null) {
+                if (shouldRenderIndicatorContentCapture && backdrop != null) {
                     val rawCaptureWidth = dockWidth + launchAdjustedSearchGap + searchWidth
                     val captureHorizontalOverscan = rawCaptureWidth *
                         ((refractionMotionProfile.exportCaptureWidthScale - 1f) / 2f).coerceAtLeast(0f)
@@ -3056,18 +3069,8 @@ private fun KernelSuAlignedBottomBar(
                             .graphicsLayer {
                                 translationX = indicatorTranslationXPx +
                                     presetPanelOffsets.indicatorPanelOffsetPx
-                                val homeScaleX = if (selectedIndex == homeIndex) {
-                                    homeClickPulseTransform.scaleX
-                                } else {
-                                    1f
-                                }
-                                val homeScaleY = if (selectedIndex == homeIndex) {
-                                    homeClickPulseTransform.scaleY
-                                } else {
-                                    1f
-                                }
-                                scaleX = homeScaleX * indicatorSettleReboundTransform.scaleX
-                                scaleY = homeScaleY * indicatorSettleReboundTransform.scaleY
+                                scaleX = indicatorSettleReboundTransform.scaleX
+                                scaleY = indicatorSettleReboundTransform.scaleY
                             }
                             .width(indicatorWidth)
                             .height(56.dp)
@@ -3167,9 +3170,6 @@ private fun KernelSuAlignedBottomBar(
                                     bottomBarSearchEnabled = searchEnabled,
                                     effectiveSearchExpanded = effectiveSearchExpanded
                                 )
-                                if (item == BottomNavItem.HOME) {
-                                    homeClickPulseKey += 1
-                                }
                                 if (searchOverride != null) {
                                     haptic(HapticType.LIGHT)
                                     searchExpansionOverride = searchOverride
@@ -3211,7 +3211,6 @@ private fun KernelSuAlignedBottomBar(
                                         interactionSource = remember { MutableInteractionSource() },
                                         indication = null
                                     ) {
-                                        homeClickPulseKey += 1
                                         val searchOverride = resolveBottomBarSearchExpansionOverrideOnNavItemClick(
                                             currentItem = currentItem,
                                             clickedItem = BottomNavItem.HOME,
@@ -3235,10 +3234,6 @@ private fun KernelSuAlignedBottomBar(
                         contentAlignment = Alignment.Center
                     ) {
                         Box(
-                            modifier = Modifier.graphicsLayer {
-                                scaleX = homeClickPulseTransform.scaleX
-                                scaleY = homeClickPulseTransform.scaleY
-                            },
                             contentAlignment = Alignment.Center
                         ) {
                             val homeSkinIconPath = uiSkinDecoration?.iconPathFor(

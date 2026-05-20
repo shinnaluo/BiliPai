@@ -158,8 +158,6 @@ private val SETTINGS_SEARCH_INDEX: List<SettingsSearchEntry> = listOf(
             "全局液态玻璃",
             "评论区液态玻璃",
             "毛玻璃",
-            "封面玻璃",
-            "信息区玻璃",
             "推荐流卡片宽度",
             "卡片宽度",
             "首页卡片宽度",
@@ -521,9 +519,9 @@ private val SETTINGS_SEARCH_INDEX: List<SettingsSearchEntry> = listOf(
     SettingsSearchEntry(
         target = SettingsSearchTarget.APPEARANCE,
         title = "首页展示",
-        subtitle = "展示样式、首页壁纸效果、玻璃样式、推荐流卡片宽度",
+        subtitle = "展示样式、首页壁纸效果、推荐流卡片宽度",
         section = "外观设置",
-        aliases = listOf("首页展示", "展示样式", "首页壁纸", "首页壁纸效果", "原图壁纸", "壁纸模糊", "强模糊", "封面玻璃样式", "信息区玻璃样式", "推荐流卡片宽度", "首页卡片宽度", "卡片宽度", "统计信息贴封面", "UP主标识", "UP标识", "up主标识", "up标识"),
+        aliases = listOf("首页展示", "展示样式", "首页壁纸", "首页壁纸效果", "原图壁纸", "壁纸模糊", "强模糊", "推荐流卡片宽度", "首页卡片宽度", "卡片宽度", "统计信息贴封面", "UP主标识", "UP标识", "up主标识", "up标识"),
         focusId = SettingsSearchFocusIds.APPEARANCE_HOME
     ),
     SettingsSearchEntry(

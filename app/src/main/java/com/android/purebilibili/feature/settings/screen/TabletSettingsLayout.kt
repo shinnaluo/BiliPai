@@ -76,6 +76,7 @@ fun TabletSettingsLayout(
     
     // Logic Callbacks
     onPrivacyModeChange: (Boolean) -> Unit,
+    onPrivacyContentAuthenticationChange: (Boolean) -> Unit,
     onCrashTrackingChange: (Boolean) -> Unit,
     onAnalyticsChange: (Boolean) -> Unit,
     onEasterEggChange: (Boolean) -> Unit,
@@ -83,6 +84,7 @@ fun TabletSettingsLayout(
     
     // State
     privacyModeEnabled: Boolean,
+    privacyContentAuthenticationEnabled: Boolean,
     customDownloadPath: String?,
     cacheSize: String,
     crashTrackingEnabled: Boolean,
@@ -173,6 +175,7 @@ fun TabletSettingsLayout(
         onTipsClick = onTipsClick,
         onOpenLinksClick = onOpenLinksClick,
         onPrivacyModeChange = onPrivacyModeChange,
+        onPrivacyContentAuthenticationChange = onPrivacyContentAuthenticationChange,
         onCrashTrackingChange = onCrashTrackingChange,
         onAnalyticsChange = onAnalyticsChange,
         onEasterEggChange = onEasterEggChange,
@@ -185,6 +188,7 @@ fun TabletSettingsLayout(
     )
     val rootCategoryState = SettingsRootCategoryState(
         privacyModeEnabled = privacyModeEnabled,
+        privacyContentAuthenticationEnabled = privacyContentAuthenticationEnabled,
         crashTrackingEnabled = crashTrackingEnabled,
         analyticsEnabled = analyticsEnabled,
         pluginCount = pluginCount,

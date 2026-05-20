@@ -29,6 +29,7 @@ internal fun BiliPaiNavDisplayHost(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     sharedTransitionScope: SharedTransitionScope? = null,
+    visibleBottomBarRoutes: Set<String> = emptySet(),
     content: @Composable (BiliPaiNavKey) -> Unit
 ) {
     val safeBackStack = remember(backStack) {
@@ -50,9 +51,10 @@ internal fun BiliPaiNavDisplayHost(
             }
         }
     }
-    val entryProvider = remember(sourceMetadata, scopedContent) {
+    val entryProvider = remember(sourceMetadata, visibleBottomBarRoutes, scopedContent) {
         biliPaiNavEntryProvider(
             sourceMetadata = sourceMetadata,
+            visibleBottomBarRoutes = visibleBottomBarRoutes,
             content = scopedContent
         )
     }

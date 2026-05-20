@@ -178,8 +178,8 @@ fun AnimationSettingsContent(
             item {
                 Box(modifier = Modifier.staggeredEntrance(1, isVisible, motionTier = settingsEntranceMotionTier)) {
                     IOSGroup {
-                        IOSSwitchItem(
-                            icon = CupertinoIcons.Default.WandAndStars,
+	                        IOSSwitchItem(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.CARD_ENTRANCE_ANIMATION),
                             title = "进场动画",
                             subtitle = "首页视频卡片的入场动画效果",
                             checked = state.cardAnimationEnabled,
@@ -187,8 +187,8 @@ fun AnimationSettingsContent(
                             iconTint = iOSPink
                         )
                         IOSDivider()
-                        IOSSwitchItem(
-                            icon = CupertinoIcons.Default.ArrowLeftArrowRight,
+	                        IOSSwitchItem(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.CARD_TRANSITION_ANIMATION),
                             title = "过渡动画",
                             subtitle = "点击卡片时的共享元素过渡效果",
                             checked = state.cardTransitionEnabled,
@@ -196,8 +196,8 @@ fun AnimationSettingsContent(
                             iconTint = iOSTeal
                         )
                         IOSDivider()
-                        IOSSwitchItem(
-                            icon = Icons.AutoMirrored.Outlined.ArrowBack,
+	                        IOSSwitchItem(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.PREDICTIVE_BACK),
                             title = predictiveBackToggleState.title,
                             subtitle = predictiveBackToggleState.subtitle,
                             checked = predictiveBackToggleState.checked,
@@ -254,8 +254,8 @@ fun AnimationSettingsContent(
                 Box(modifier = Modifier.staggeredEntrance(3, isVisible, motionTier = settingsEntranceMotionTier)) {
                     IOSGroup {
                         if (isLiquidGlassAvailable) {
-                            IOSSwitchItem(
-                                icon = CupertinoIcons.Default.Drop,
+	                            IOSSwitchItem(
+	                                icon = rememberSettingsSemanticIcon(SettingsIconRole.BOTTOM_BAR_GLASS),
                                 title = "底栏液态玻璃",
                                 subtitle = "底部导航栏的液态玻璃折射效果",
                                 checked = bottomBarLiquidGlassEnabled,
@@ -266,7 +266,7 @@ fun AnimationSettingsContent(
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
-                                        CupertinoIcons.Default.Drop,
+	                                        rememberSettingsSemanticIcon(SettingsIconRole.BOTTOM_BAR_GLASS),
                                         contentDescription = null,
                                         tint = iOSBlue,
                                         modifier = Modifier.size(24.dp)
@@ -357,8 +357,8 @@ fun AnimationSettingsContent(
                         }
 
                         // 磨砂效果 (始终显示)
-                        IOSSwitchItem(
-                            icon = CupertinoIcons.Default.SquareStack3dUp,
+	                        IOSSwitchItem(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.TOP_BAR_BLUR),
                             title = "顶部栏磨砂",
                             subtitle = "顶部导航栏的毛玻璃模糊效果",
                             checked = state.headerBlurEnabled,
@@ -366,8 +366,8 @@ fun AnimationSettingsContent(
                             iconTint = iOSBlue
                         )
                         IOSDivider()
-                        IOSSwitchItem(
-                            icon = CupertinoIcons.Default.Sparkles,
+	                        IOSSwitchItem(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.BOTTOM_BAR_BLUR),
                             title = "底栏磨砂",
                             subtitle = "底部导航栏的毛玻璃模糊效果",
                             checked = state.bottomBarBlurEnabled,
@@ -397,8 +397,8 @@ fun AnimationSettingsContent(
             item {
                 Box(modifier = Modifier.staggeredEntrance(5, isVisible, motionTier = settingsEntranceMotionTier)) {
                     IOSGroup {
-                        IOSSwitchItem(
-                            icon = CupertinoIcons.Default.RectangleStack,
+	                        IOSSwitchItem(
+	                            icon = rememberSettingsSemanticIcon(SettingsIconRole.FLOATING_BOTTOM_BAR),
                             title = "悬浮底栏",
                             subtitle = "关闭后底栏将沉浸式贴底显示",
                             checked = state.isBottomBarFloating,

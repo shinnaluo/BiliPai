@@ -25,6 +25,8 @@ internal data class BottomPagerRenderBudget(
     val deferProfileImmersiveBackground: Boolean
 )
 
+internal const val BOTTOM_TAB_RENDER_BUDGET_HOLD_MILLIS = 220L
+
 internal fun resolveTopLevelNavigationAction(
     currentRoute: String?,
     targetRoute: String,
@@ -150,6 +152,20 @@ internal fun shouldUseInstantBottomTabTransition(
         fromRouteBase != toRouteBase &&
         fromRouteBase in visibleBottomBarRoutes &&
         toRouteBase in visibleBottomBarRoutes
+}
+
+internal fun resolveBottomTabTransitionTargetRoute(
+    currentRoute: String?,
+    targetRoute: String,
+    visibleBottomBarRoutes: Set<String>
+): String? {
+    return targetRoute.takeIf {
+        shouldUseInstantBottomTabTransition(
+            fromRoute = currentRoute,
+            toRoute = targetRoute,
+            visibleBottomBarRoutes = visibleBottomBarRoutes
+        )
+    }
 }
 
 internal fun shouldBypassNavigationDebounceForRoute(targetRoute: String): Boolean {

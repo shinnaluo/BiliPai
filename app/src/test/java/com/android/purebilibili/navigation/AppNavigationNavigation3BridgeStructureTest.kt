@@ -150,6 +150,18 @@ class AppNavigationNavigation3BridgeStructureTest {
         assertFalse(buildFile.contains("navigation-compose"))
     }
 
+    @Test
+    fun privacyProtectedNavigationUsesCentralAuthenticationGate() {
+        val source = appNavigationSource()
+
+        assertTrue(source.contains("SettingsManager.getPrivacyContentAuthenticationEnabled(context)"))
+        assertTrue(source.contains("shouldRequirePrivacyAuthentication("))
+        assertTrue(source.contains("privacyAuthenticationEnabled = privacyAuthenticationEnabled"))
+        assertTrue(source.contains("onPrivacyAuthenticationRequired("))
+        assertTrue(source.contains("pushNavigation3KeyDirect("))
+        assertTrue(source.contains("PrivacyAuthenticationReason.OPEN_PRIVACY_CONTENT"))
+    }
+
     private fun appNavigationSource(): String {
         return listOf(
             File("app/src/main/java/com/android/purebilibili/navigation/AppNavigation.kt"),
