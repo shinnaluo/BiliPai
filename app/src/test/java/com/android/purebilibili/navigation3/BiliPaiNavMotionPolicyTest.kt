@@ -49,28 +49,78 @@ class BiliPaiNavMotionPolicyTest {
             shouldUseClassicBackForVideoSharedElementReturn(
                 currentKey = BiliPaiNavKey.VideoDetail("BV1", sourceRoute = "home"),
                 previousKey = BiliPaiNavKey.Home,
-                cardTransitionEnabled = true
+                cardTransitionEnabled = true,
+                sourceMetadata = BiliPaiNavSourceMetadata(
+                    sourceKey = "home:BV1",
+                    sourceRoute = "home",
+                    clickedBoundsRecorded = true,
+                    cardFullyVisible = true
+                )
             )
         )
         assertTrue(
             shouldUseClassicBackForVideoSharedElementReturn(
                 currentKey = BiliPaiNavKey.VideoDetail("BV1", sourceRoute = "dynamic"),
                 previousKey = BiliPaiNavKey.Dynamic,
-                cardTransitionEnabled = true
+                cardTransitionEnabled = true,
+                sourceMetadata = BiliPaiNavSourceMetadata(
+                    sourceKey = "dynamic:BV1",
+                    sourceRoute = "dynamic",
+                    clickedBoundsRecorded = true,
+                    cardFullyVisible = true
+                )
             )
         )
         assertFalse(
             shouldUseClassicBackForVideoSharedElementReturn(
                 currentKey = BiliPaiNavKey.VideoDetail("BV1", sourceRoute = "home"),
                 previousKey = BiliPaiNavKey.Home,
-                cardTransitionEnabled = false
+                cardTransitionEnabled = true,
+                sourceMetadata = BiliPaiNavSourceMetadata(
+                    sourceKey = "home:BV1",
+                    sourceRoute = "home",
+                    clickedBoundsRecorded = true,
+                    cardFullyVisible = false
+                )
+            )
+        )
+        assertFalse(
+            shouldUseClassicBackForVideoSharedElementReturn(
+                currentKey = BiliPaiNavKey.VideoDetail("BV2", sourceRoute = "home"),
+                previousKey = BiliPaiNavKey.Home,
+                cardTransitionEnabled = true,
+                sourceMetadata = BiliPaiNavSourceMetadata(
+                    sourceKey = "home:BV1",
+                    sourceRoute = "home",
+                    clickedBoundsRecorded = true,
+                    cardFullyVisible = true
+                )
+            )
+        )
+        assertFalse(
+            shouldUseClassicBackForVideoSharedElementReturn(
+                currentKey = BiliPaiNavKey.VideoDetail("BV1", sourceRoute = "home"),
+                previousKey = BiliPaiNavKey.Home,
+                cardTransitionEnabled = false,
+                sourceMetadata = BiliPaiNavSourceMetadata(
+                    sourceKey = "home:BV1",
+                    sourceRoute = "home",
+                    clickedBoundsRecorded = true,
+                    cardFullyVisible = true
+                )
             )
         )
         assertFalse(
             shouldUseClassicBackForVideoSharedElementReturn(
                 currentKey = BiliPaiNavKey.Settings,
                 previousKey = BiliPaiNavKey.Home,
-                cardTransitionEnabled = true
+                cardTransitionEnabled = true,
+                sourceMetadata = BiliPaiNavSourceMetadata(
+                    sourceKey = "home:BV1",
+                    sourceRoute = "home",
+                    clickedBoundsRecorded = true,
+                    cardFullyVisible = true
+                )
             )
         )
     }

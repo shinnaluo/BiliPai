@@ -66,6 +66,7 @@ class AppNavigationNavigation3BridgeStructureTest {
         assertTrue(interceptIndex >= 0)
         assertTrue(systemBackIndex > interceptIndex)
         assertTrue(source.contains("shouldUseClassicBackForVideoSharedElementReturn("))
+        assertTrue(source.contains("sourceMetadata = navigation3SourceMetadata"))
         assertTrue(source.contains("shouldInterceptVideoSharedElementReturn ||"))
     }
 

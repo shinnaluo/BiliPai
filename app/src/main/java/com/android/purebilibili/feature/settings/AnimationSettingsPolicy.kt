@@ -7,9 +7,9 @@ import com.android.purebilibili.core.store.resolveLegacyLiquidGlassProgress
 
 internal const val PREDICTIVE_BACK_TOGGLE_TITLE = "预测性返回动画"
 internal const val PREDICTIVE_BACK_TOGGLE_ACTIVE_SUBTITLE =
-    "当前交给系统和导航组件预览返回，关闭后改用经典回退"
+    "普通返回交给系统预览；视频共享元素回程仍保持卡片归位"
 internal const val PREDICTIVE_BACK_TOGGLE_INACTIVE_SUBTITLE =
-    "当前使用经典回退，开启后恢复系统预测返回预览"
+    "普通返回使用经典返回；共享元素进入和回程不受影响"
 internal const val PREDICTIVE_BACK_TOGGLE_DEPENDENCY_SUBTITLE =
     "需先开启“过渡动画”后，才能调整返回动效"
 

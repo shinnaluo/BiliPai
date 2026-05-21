@@ -39,14 +39,13 @@ class BiliPaiNavDisplayHostStructureTest {
     }
 
     @Test
-    fun classicBackInterceptorIsComposedAfterNavDisplay() {
+    fun navDisplayHostDoesNotRegisterClassicBackInterceptor() {
         val source = navDisplayHostSource()
 
-        val navDisplayIndex = source.indexOf("NavDisplay(")
-        val backHandlerIndex = source.indexOf("BackHandler(")
-
-        assertTrue(navDisplayIndex >= 0)
-        assertTrue(backHandlerIndex > navDisplayIndex)
+        assertTrue(source.contains("NavDisplay("))
+        assertTrue(source.contains("onBack = onBack"))
+        kotlin.test.assertFalse(source.contains("import androidx.activity.compose.BackHandler"))
+        kotlin.test.assertFalse(source.contains("BackHandler("))
     }
 
     private fun navDisplayHostSource(): String {

@@ -680,12 +680,14 @@ fun AppNavigation(
         val shouldInterceptVideoSharedElementReturn = remember(
             cardTransitionEnabled,
             currentNavigation3Key,
-            previousNavigation3Key
+            previousNavigation3Key,
+            navigation3SourceMetadata
         ) {
             shouldUseClassicBackForVideoSharedElementReturn(
                 currentKey = currentNavigation3Key,
                 previousKey = previousNavigation3Key,
-                cardTransitionEnabled = cardTransitionEnabled
+                cardTransitionEnabled = cardTransitionEnabled,
+                sourceMetadata = navigation3SourceMetadata
             )
         }
         val shouldInterceptSystemBack = remember(

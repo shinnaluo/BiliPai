@@ -1,7 +1,6 @@
 package com.android.purebilibili.navigation3
 
 import android.app.Application
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -88,13 +87,6 @@ internal fun BiliPaiNavDisplayHost(
         entryProvider = entryProvider
     )
 
-    BackHandler(
-        enabled = shouldInterceptSystemBackForNavigation3(
-            mode = motionMode,
-            appBackActionRequiresInterception = false
-        ),
-        onBack = onBack
-    )
 }
 
 @Composable

@@ -111,10 +111,17 @@ internal fun shouldInterceptSystemBackForNavigation3(
 internal fun shouldUseClassicBackForVideoSharedElementReturn(
     currentKey: BiliPaiNavKey?,
     previousKey: BiliPaiNavKey?,
-    cardTransitionEnabled: Boolean
+    cardTransitionEnabled: Boolean,
+    sourceMetadata: BiliPaiNavSourceMetadata
 ): Boolean {
+    val videoKey = currentKey as? BiliPaiNavKey.VideoDetail ?: return false
+    val normalizedSourceRoute = sourceMetadata.sourceRoute?.substringBefore("?")
+    val normalizedVideoRoute = videoKey.sourceRoute?.substringBefore("?")
     return cardTransitionEnabled &&
-        currentKey is BiliPaiNavKey.VideoDetail &&
+        sourceMetadata.sharedTransitionReady &&
+        normalizedSourceRoute != null &&
+        normalizedVideoRoute == normalizedSourceRoute &&
+        sourceMetadata.sourceKey == "$normalizedSourceRoute:${videoKey.bvid}" &&
         previousKey != null &&
         isCardReturnTargetNavKey(previousKey)
 }
