@@ -131,13 +131,12 @@ import com.android.purebilibili.navigation3.BiliPaiReturnSessionState
 import com.android.purebilibili.navigation3.legacyRouteToBiliPaiNavKey
 import com.android.purebilibili.navigation3.popBiliPaiNavKey
 import com.android.purebilibili.navigation3.pushBiliPaiNavKey
+import com.android.purebilibili.navigation3.resolveBiliPaiBackGestureDecision
 import com.android.purebilibili.navigation3.resolveBiliPaiNavMotionMode
 import com.android.purebilibili.navigation3.resolveBiliPaiNavEntryContentRole
 import com.android.purebilibili.navigation3.resolveBiliPaiNavSourceMetadata
 import com.android.purebilibili.navigation3.resolveBiliPaiVideoSource
 import com.android.purebilibili.navigation3.resolveInitialBiliPaiBackStack
-import com.android.purebilibili.navigation3.shouldInterceptSystemBackForNavigation3
-import com.android.purebilibili.navigation3.shouldUseClassicBackForVideoSharedElementReturn
 import com.android.purebilibili.navigation3.shouldUseNavigation3PredictivePop
 import com.android.purebilibili.navigation3.toLegacyRoute
 import androidx.compose.ui.Alignment
@@ -677,33 +676,24 @@ fun AppNavigation(
         }
         val navigation3SourceMetadata = currentNavigation3SourceMetadata()
         val previousNavigation3Key = navigation3BackStack.getOrNull(navigation3BackStack.lastIndex - 1)
-        val shouldInterceptVideoSharedElementReturn = remember(
+        val backGestureDecision = remember(
+            predictiveBackAnimationEnabled,
             cardTransitionEnabled,
+            systemBackAction,
             currentNavigation3Key,
             previousNavigation3Key,
             navigation3SourceMetadata
         ) {
-            shouldUseClassicBackForVideoSharedElementReturn(
+            resolveBiliPaiBackGestureDecision(
+                predictiveBackAnimationEnabled = predictiveBackAnimationEnabled,
+                cardTransitionEnabled = cardTransitionEnabled,
+                systemBackAction = systemBackAction,
                 currentKey = currentNavigation3Key,
                 previousKey = previousNavigation3Key,
-                cardTransitionEnabled = cardTransitionEnabled,
                 sourceMetadata = navigation3SourceMetadata
             )
         }
-        val shouldInterceptSystemBack = remember(
-            predictiveBackAnimationEnabled,
-            cardTransitionEnabled,
-            systemBackAction,
-            shouldInterceptVideoSharedElementReturn
-        ) {
-            shouldInterceptSystemBackForNavigation3(
-                mode = navigation3MotionMode,
-                appBackActionRequiresInterception =
-                    shouldInterceptVideoSharedElementReturn ||
-                    systemBackAction == AppSystemBackAction.RETURN_TO_HOME_TAB ||
-                        (!predictiveBackAnimationEnabled && systemBackAction == AppSystemBackAction.NAVIGATE_UP)
-            )
-        }
+        val shouldInterceptSystemBack = backGestureDecision.interceptSystemBack
         val activeBottomTabRoute = if (currentNavigation3Key == BiliPaiNavKey.MainHost) {
             currentBottomNavItem.route
         } else {

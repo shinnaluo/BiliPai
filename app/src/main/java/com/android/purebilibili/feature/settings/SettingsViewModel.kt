@@ -62,7 +62,7 @@ data class SettingsUiState(
     val cardAnimationEnabled: Boolean = false,     //  卡片进场动画（默认关闭）
     val cardTransitionEnabled: Boolean = false,    //  卡片过渡动画（默认关闭）
     val videoTransitionRealtimeBlurEnabled: Boolean = true,
-    val predictiveBackAnimationEnabled: Boolean = true, // 预测性返回手势支持
+    val predictiveBackAnimationEnabled: Boolean = true, // 预测性返回预览支持
     val smartVisualGuardEnabled: Boolean = false, // [Retired] 智能流畅优先已下线
     val cacheSize: String = "计算中...",
     val cacheBreakdown: CacheUtils.CacheBreakdown? = null,  //  详细缓存统计
@@ -751,7 +751,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // 预测性返回手势支持开关
+    // 预测性返回预览支持开关
     fun togglePredictiveBackAnimation(value: Boolean) {
         viewModelScope.launch {
             SettingsManager.setPredictiveBackAnimationEnabled(context, value)

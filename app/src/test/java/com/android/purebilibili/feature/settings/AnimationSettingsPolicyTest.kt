@@ -18,8 +18,10 @@ class AnimationSettingsPolicyTest {
         assertTrue(enabledAndChecked.enabled)
         assertTrue(enabledAndChecked.checked)
         assertEquals(PREDICTIVE_BACK_TOGGLE_TITLE, enabledAndChecked.title)
+        assertEquals("预测性返回预览", enabledAndChecked.title)
         assertEquals(PREDICTIVE_BACK_TOGGLE_ACTIVE_SUBTITLE, enabledAndChecked.subtitle)
-        assertTrue(enabledAndChecked.subtitle.contains("普通返回"))
+        assertTrue(enabledAndChecked.subtitle.contains("系统"))
+        assertTrue(enabledAndChecked.subtitle.contains("Navigation3"))
         assertTrue(enabledAndChecked.subtitle.contains("共享元素"))
 
         val enabledAndUnchecked = resolvePredictiveBackToggleUiState(
@@ -31,7 +33,7 @@ class AnimationSettingsPolicyTest {
         assertEquals(PREDICTIVE_BACK_TOGGLE_TITLE, enabledAndUnchecked.title)
         assertEquals(PREDICTIVE_BACK_TOGGLE_INACTIVE_SUBTITLE, enabledAndUnchecked.subtitle)
         assertTrue(enabledAndUnchecked.subtitle.contains("经典返回"))
-        assertTrue(enabledAndUnchecked.subtitle.contains("共享元素"))
+        assertTrue(enabledAndUnchecked.subtitle.contains("应用壳"))
     }
 
     @Test

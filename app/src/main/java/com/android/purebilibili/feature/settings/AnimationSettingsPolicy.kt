@@ -5,11 +5,11 @@ import com.android.purebilibili.core.store.normalizeLiquidGlassProgress
 import com.android.purebilibili.core.store.normalizeLiquidGlassStrength
 import com.android.purebilibili.core.store.resolveLegacyLiquidGlassProgress
 
-internal const val PREDICTIVE_BACK_TOGGLE_TITLE = "预测性返回动画"
+internal const val PREDICTIVE_BACK_TOGGLE_TITLE = "预测性返回预览"
 internal const val PREDICTIVE_BACK_TOGGLE_ACTIVE_SUBTITLE =
-    "普通返回交给系统预览；视频共享元素回程仍保持卡片归位"
+    "普通返回交给系统和 Navigation3 预览；共享元素回程只保留元素形变"
 internal const val PREDICTIVE_BACK_TOGGLE_INACTIVE_SUBTITLE =
-    "普通返回使用经典返回；共享元素进入和回程不受影响"
+    "应用壳接管经典返回，关闭 Navigation3 栈返回预览"
 internal const val PREDICTIVE_BACK_TOGGLE_DEPENDENCY_SUBTITLE =
     "需先开启“过渡动画”后，才能调整返回动效"
 
