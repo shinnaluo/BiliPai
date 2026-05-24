@@ -5,11 +5,11 @@
 </p>
 
 <p align="center">
-  <sub>Last updated: 2026-05-24 · Synced to v8.3.9 (source of truth: <a href="CHANGELOG.md">CHANGELOG</a> + code)</sub>
+  <sub>Last updated: 2026-05-24 · Synced to v8.4.0 (source of truth: <a href="CHANGELOG.md">CHANGELOG</a> + code)</sub>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-8.3.9-fb7299?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/Version-8.4.0-fb7299?style=flat-square" alt="Version">
   <img src="https://img.shields.io/github/stars/jay3-yy/BiliPai?style=flat-square&color=yellow" alt="Stars">
   <img src="https://img.shields.io/github/forks/jay3-yy/BiliPai?style=flat-square&color=green" alt="Forks">
   <img src="https://img.shields.io/github/last-commit/jay3-yy/BiliPai?style=flat-square&color=purple" alt="Last Commit">
@@ -435,15 +435,12 @@ A lightweight plugin format requiring **no coding**, just a simple JSON file to 
 
 See full changelog: [CHANGELOG.md](CHANGELOG.md)
 
-### Latest (v8.4.0-Beta1 · 2026-05-24)
+### Latest (v8.4.0 · 2026-05-24)
 
-- Filled the recommendation filtering, not-interested, Today Watch, and danmaku keyword rule gaps from issue 394.
-- Narrowed recommendation field mapping against the real API shape to reduce JSON-rule drift from unreliable fields.
-- Added skin-package image preview and installed-skin deletion, and fixed the fifth bottom-bar skin icon.
-- Added the built-in first-view recommendation plugin with recommendation anonymization, statistics, and acknowledgements.
-- Let SponsorBlock daily summary notifications open plugin settings and added a test-notification action.
-- Added daily JSON-rule plugin filter-stat summaries, test notifications, and a settings switch.
-- Bumped the app to `8.4.0-Beta1` with `versionCode` `205`.
+- Promoted 8.4.0 to the stable release with `versionCode` `206`.
+- Included post-Beta1 fixes for live danmaku reconnection, space-page entry points, the home drawer history entry, player interaction defaults, and foldable portrait-video detail layout.
+- Added an in-app global icon-library setting for Material Symbols, Lucide, Phosphor, and Tabler, with semantic icon deduplication coverage.
+- Kept the Beta1 recommendation filtering, JSON rule, skin-package management, bottom-bar skin icon, first-view recommendation plugin, and plugin-stat notification updates.
 
 ---
 

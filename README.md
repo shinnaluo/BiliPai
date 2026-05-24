@@ -15,7 +15,7 @@
 </p>
 
 <p>
-  <img src="https://img.shields.io/badge/Version-8.3.9-007AFF?style=flat-square&labelColor=ffffff" alt="Version 8.3.9" />
+  <img src="https://img.shields.io/badge/Version-8.4.0-007AFF?style=flat-square&labelColor=ffffff" alt="Version 8.4.0" />
   <img src="https://img.shields.io/badge/Android-8.0%2B-34C759?style=flat-square&logo=android&logoColor=white" alt="Android 8.0+" />
   <img src="https://img.shields.io/badge/Kotlin-100%25-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin" />
   <img src="https://img.shields.io/badge/License-GPL--3.0-FF3B30?style=flat-square" alt="GPL-3.0" />
@@ -181,14 +181,12 @@ cd BiliPai
 
 ## 最近更新
 
-当前仓库版本号已更新到 `8.4.0-Beta1 / versionCode 205`。公开发布说明请以 [CHANGELOG.md](CHANGELOG.md) 为准；最新完整记录为 `v8.4.0-Beta1`：
+当前仓库版本号已更新到 `8.4.0 / versionCode 206`。公开发布说明请以 [CHANGELOG.md](CHANGELOG.md) 为准；最新完整记录为 `v8.4.0`：
 
-- 补齐 issue 394 暴露的推荐过滤、首页不感兴趣、今日看点和弹幕关键词规则缺口。
-- 按真实 API 文档收窄推荐字段映射，降低 JSON 规则插件依赖不可靠字段的风险。
-- 皮肤包支持图片预览和已安装皮肤包删除，并修复第五个底栏皮肤图标显示异常。
-- 新增内置初见推荐插件，补充推荐匿名化、统计能力和相关致谢。
-- 空降助手每日汇总通知支持点击回到插件设置，并新增测试通知入口。
-- JSON 规则插件支持每日过滤数量汇总、通知测试和设置页开关。
+- 汇总 8.4.0-Beta1 后的直播弹幕重连、空间页、首页侧栏、播放器默认设置和折叠屏竖屏视频详情修复。
+- 新增应用内全局图标库设置，支持 Material Symbols、Lucide、Phosphor、Tabler，并补齐语义图标去重约束。
+- 修复普通折叠屏内屏观看竖屏视频时播放器占满首屏的问题，评论区和推荐入口保持可访问。
+- 保留 Beta1 的推荐过滤、JSON 规则、皮肤包管理、底栏皮肤图标、初见推荐插件和插件统计通知改动。
 
 ## 路线图
 
