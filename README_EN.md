@@ -435,15 +435,15 @@ A lightweight plugin format requiring **no coding**, just a simple JSON file to 
 
 See full changelog: [CHANGELOG.md](CHANGELOG.md)
 
-### Latest (v8.3.9 · 2026-05-24)
+### Latest (v8.4.0-Beta1 · 2026-05-24)
 
-- Tightened video-detail return, shared-element, and predictive-back routing to reduce black frames, hard cuts, stale sources, and end-of-return rebounds.
-- Added the video-detail share panel and prefer cover-image payloads for system sharing instead of text-only fallbacks.
-- Fixed audio-only mode entry loading, up/down switching, playback state sync, collection switching, and playlist queue handling.
-- Reworked comment image preview into a black immersive 3D flip viewer with only real like, reply, and share actions.
-- Fixed MIUIX top tabs when selecting the fifth tab and restored native indicator styling; iOS top tabs now use a gray-white capsule with a spring-driven shared movement.
-- Cleaned old animation helpers and return rebound leftovers, and consolidated shared-element spatial motion tokens.
-- Bumped the app to `8.3.9` with `versionCode` `204`.
+- Filled the recommendation filtering, not-interested, Today Watch, and danmaku keyword rule gaps from issue 394.
+- Narrowed recommendation field mapping against the real API shape to reduce JSON-rule drift from unreliable fields.
+- Added skin-package image preview and installed-skin deletion, and fixed the fifth bottom-bar skin icon.
+- Added the built-in first-view recommendation plugin with recommendation anonymization, statistics, and acknowledgements.
+- Let SponsorBlock daily summary notifications open plugin settings and added a test-notification action.
+- Added daily JSON-rule plugin filter-stat summaries, test notifications, and a settings switch.
+- Bumped the app to `8.4.0-Beta1` with `versionCode` `205`.
 
 ---
 

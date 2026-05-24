@@ -1,5 +1,26 @@
 # Changelog
 
+## v8.4.0-Beta1 (2026-05-24)
+
+### 版本信息
+- 版本号从 `8.3.9` 升级到 `8.4.0-Beta1`，`versionCode` 升级到 `205`。
+- 本次为 8.3.9 之后的 Beta 更新，重点补齐推荐过滤、JSON 规则、皮肤包管理、底栏皮肤显示、初见推荐内置插件和插件统计通知链路。
+
+### 更新内容
+- **推荐与弹幕规则补齐**：处理 issue 394 暴露的推荐过滤和弹幕规则缺口，补充推荐插件 API 字段、首页不感兴趣策略、今日看点过滤策略和弹幕关键词过滤规则覆盖。
+- **推荐字段按 API 文档收窄**：按真实 API 文档修正推荐数据字段映射，移除不可靠字段假设，补充列表模型映射测试，降低插件规则误判和字段漂移风险。
+- **皮肤包管理增强**：新增皮肤包图片预览与删除能力，设置页可以查看皮肤包内图片资源并删除已安装皮肤包；同步整理皮肤包安装存储和能力展示策略。
+- **底栏皮肤图标修复**：修复第五个底栏皮肤图标显示异常，补充底栏皮肤装饰测试，避免自定义皮肤在多标签位下出现缺图或错位。
+- **初见推荐内置插件**：新增内置初见推荐插件，用更可控的推荐匿名化与统计策略处理首页推荐内容，并在 README / README_EN 中补充相关说明和致谢。
+- **空降助手通知补全**：空降助手每日汇总通知支持点击跳转插件设置，并新增测试通知入口，方便确认系统通知权限和展示效果。
+- **JSON 插件统计通知**：新增 JSON 规则插件统计通知渠道、每日过滤数量汇总、测试通知和设置页开关，按上次汇总后的增量展示过滤结果。
+- **版本与文档同步**：版本号升级到 `8.4.0-Beta1` / `versionCode 205`，README、README_EN 和更新日志同步到 8.4.0-Beta1。
+
+### 验证
+- `./gradlew :app:testDebugUnitTest --tests 'com.android.purebilibili.app.AppNotificationChannelsTest' --tests 'com.android.purebilibili.feature.plugin.SponsorBlockPluginPolicyTest' --tests 'com.android.purebilibili.core.plugin.json.JsonPluginStatsNotificationPolicyTest'`
+- `./gradlew :app:compileDebugKotlin`
+- `git diff --check`
+
 ## v8.3.9 (2026-05-24)
 
 ### 版本信息

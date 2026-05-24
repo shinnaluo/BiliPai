@@ -44,6 +44,11 @@ import com.android.purebilibili.core.plugin.skin.UiSkinSettingsStore
 import com.android.purebilibili.core.plugin.skin.rememberUiSkinState
 import com.android.purebilibili.core.plugin.PluginInfo
 import com.android.purebilibili.core.plugin.PluginManager
+import com.android.purebilibili.core.plugin.json.JsonPluginStatsNotificationConfig
+import com.android.purebilibili.core.plugin.json.persistJsonPluginStatsNotificationConfig
+import com.android.purebilibili.core.plugin.json.postJsonPluginStatsTestNotification
+import com.android.purebilibili.core.plugin.json.readJsonPluginStatsNotificationConfig
+import com.android.purebilibili.core.plugin.json.scheduleJsonPluginStatsSummary
 import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.core.theme.iOSPink  // 插件图标色
 import com.android.purebilibili.core.theme.iOSBlue
@@ -58,6 +63,7 @@ import com.android.purebilibili.core.ui.rememberAppBackIcon
 import com.android.purebilibili.core.ui.components.AppAdaptiveSwitch
 import com.android.purebilibili.core.ui.components.rememberAdaptiveSemanticIconTint
 import com.android.purebilibili.core.util.FormatUtils
+import com.android.purebilibili.core.util.rememberNotificationPermissionState
 import com.android.purebilibili.feature.plugin.SPONSOR_BLOCK_PLUGIN_ID
 import com.android.purebilibili.feature.settings.buildUiSkinImagePreviewItems
 import com.android.purebilibili.feature.settings.buildUiSkinPackagePreview
@@ -184,6 +190,23 @@ fun PluginsContent(
     
     // Local UI states
     var expandedPluginId by remember { mutableStateOf<String?>(null) }
+    var jsonStatsNotificationEnabled by remember(context) {
+        mutableStateOf(readJsonPluginStatsNotificationConfig(context).enabled)
+    }
+    fun showToast(message: String) {
+        android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_SHORT).show()
+    }
+    fun sendJsonStatsTestNotification() {
+        val posted = postJsonPluginStatsTestNotification(context)
+        showToast(if (posted) "测试通知已发送" else "系统通知未开启")
+    }
+    val notificationPermission = rememberNotificationPermissionState { granted ->
+        if (granted) {
+            sendJsonStatsTestNotification()
+        } else {
+            showToast("通知权限未开启")
+        }
+    }
     
     //  导入插件对话框状态
     var showImportDialog by remember { mutableStateOf(false) }
@@ -728,6 +751,25 @@ fun PluginsContent(
             
             //  已安装的 JSON 插件列表
             if (jsonPlugins.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    JsonPluginStatsNotificationSection(
+                        enabled = jsonStatsNotificationEnabled,
+                        onEnabledChange = { enabled ->
+                            jsonStatsNotificationEnabled = enabled
+                            persistJsonPluginStatsNotificationConfig(
+                                context,
+                                JsonPluginStatsNotificationConfig(enabled = enabled)
+                            )
+                            scheduleJsonPluginStatsSummary(context, enabled)
+                        },
+                        onSendTest = {
+                            notificationPermission.launchWithPermission {
+                                sendJsonStatsTestNotification()
+                            }
+                        }
+                    )
+                }
                 item {
                     Spacer(modifier = Modifier.height(12.dp))
                     val filterStats by com.android.purebilibili.core.plugin.json.JsonPluginManager.filterStats.collectAsState()
@@ -1723,6 +1765,81 @@ private fun PluginCapabilityDetailSection(
 private fun getPluginColor(index: Int): Color {
     val colors = listOf(iOSTeal, iOSOrange, iOSBlue, iOSGreen, iOSPurple, iOSPink)
     return colors[index % colors.size]
+}
+
+@Composable
+private fun JsonPluginStatsNotificationSection(
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit,
+    onSendTest: () -> Unit
+) {
+    Surface(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(12.dp)),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(iOSPurple.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = CupertinoIcons.Default.Bell,
+                        contentDescription = null,
+                        tint = iOSPurple,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(14.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "插件统计通知",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "每天汇总 JSON 规则插件过滤数量",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                AppAdaptiveSwitch(
+                    checked = enabled,
+                    onCheckedChange = onEnabledChange
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 66.dp)
+                    .height(0.5.dp)
+                    .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            )
+            TextButton(
+                onClick = onSendTest,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = ButtonDefaults.textButtonColors(contentColor = iOSPurple)
+            ) {
+                Icon(CupertinoIcons.Default.Bell, null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("发送测试通知", style = MaterialTheme.typography.labelMedium)
+            }
+        }
+    }
 }
 
 /**
