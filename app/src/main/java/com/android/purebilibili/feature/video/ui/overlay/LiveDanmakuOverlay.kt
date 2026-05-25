@@ -151,12 +151,14 @@ fun LiveDanmakuOverlay(
                                 ownership = LiveDanmakuBitmapOwnership.CONTROLLER_ATTACHED
                             )
                         }
-                        ctrl.setData(danmakuList.toList(), 0)
-                        ctrl.invalidateView()
+                        val snapshot = danmakuList.toList()
+                        executeLiveDanmakuDataRefresh(
+                            pause = { ctrl.pause() },
+                            setData = { ctrl.setData(snapshot, 0) },
+                            start = { ctrl.start(currentTime) },
+                            invalidateView = { ctrl.invalidateView() }
+                        )
                     }
-
-                    // 保持渲染时钟前进，但降频到 10fps 减轻主线程压力
-                    ctrl.start(currentTime)
                     tick++
                 }
             } catch (e: Exception) {
