@@ -17,6 +17,16 @@ class BiliPaiNavContentTransformPolicyStructureTest {
     }
 
     @Test
+    fun disabledVideoDirectionalReturnUsesStrongExitTravel() {
+        val source = contentTransformPolicySource()
+        val returnFunctionStart = source.indexOf("private fun disabledVideoDirectionReturnTransform")
+        val returnFunctionEnd = source.length
+        val returnFunction = source.substring(returnFunctionStart, returnFunctionEnd)
+
+        assertTrue(returnFunction.contains("targetOffsetX = { width -> directionSign * width / 2 }"))
+    }
+
+    @Test
     fun spaceForwardUsesLightSlideAndFade() {
         val source = contentTransformPolicySource()
 

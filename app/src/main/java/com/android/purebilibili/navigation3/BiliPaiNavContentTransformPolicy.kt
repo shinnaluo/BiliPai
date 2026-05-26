@@ -71,7 +71,7 @@ private fun disabledVideoDirectionReturnTransform(directionSign: Int): ContentTr
         (
             slideOutHorizontally(
                 animationSpec = tween(NAV3_DISABLED_VIDEO_DIRECTION_MILLIS),
-                targetOffsetX = { width -> directionSign * width / 4 }
+                targetOffsetX = { width -> directionSign * width / 2 }
             ) + fadeOut(animationSpec = tween(NAV3_DISABLED_VIDEO_DIRECTION_MILLIS))
         )
 }
