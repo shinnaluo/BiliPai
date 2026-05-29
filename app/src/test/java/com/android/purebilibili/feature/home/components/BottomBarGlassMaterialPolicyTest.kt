@@ -114,8 +114,8 @@ class BottomBarGlassMaterialPolicyTest {
         assertEquals(1.2f, light.highlightWidthScale)
         assertEquals(0.72f, light.shadowAlphaScale)
         assertEquals(BottomBarInnerRimGlowSpec(radiusDp = 5f, alpha = 0.09f), light.innerRimGlow)
-        assertEquals(0.035f, light.foregroundTint.alpha, 0.001f)
-        assertEquals(0.035f, dark.foregroundTint.alpha, 0.001f)
+        assertEquals(0f, light.foregroundTint.alpha, 0.001f)
+        assertEquals(0f, dark.foregroundTint.alpha, 0.001f)
         assertEquals(
             null,
             resolveBottomBarGlassMaterialSpec(
@@ -191,7 +191,7 @@ class BottomBarGlassMaterialPolicyTest {
         )
 
         assertEquals(6.5f, settling.blurRadiusDp!!, 0.001f)
-        assertEquals(0.1075f, settling.foregroundTint.alpha, 0.002f)
+        assertEquals(0.09f, settling.foregroundTint.alpha, 0.002f)
         assertEquals(1.25f, settling.highlightWidthScale, 0.001f)
     }
 

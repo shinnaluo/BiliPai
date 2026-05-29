@@ -112,7 +112,7 @@ private fun ios26BottomBarGlassMaterial(
         motionProgress.coerceIn(0f, 1f) * 0.45f,
         pressProgress.coerceIn(0f, 1f) * 0.35f
     )
-    // iOS26 预设滚动时让主题色参与玻璃膜；保留轻微 idle 底色，避免停止瞬间明暗跳变。
+    // iOS26 预设只在滚动回落期间让主题色参与玻璃膜；idle 必须回到原本的黑/白玻璃。
     val resolvedAccent = if (accentColor == Color.Unspecified) {
         Color(0xFF0A84FF)
     } else {
@@ -123,7 +123,7 @@ private fun ios26BottomBarGlassMaterial(
         stop = Color.White,
         fraction = if (isDarkTheme) 0.24f else 0.34f
     )
-    val brightnessAlpha = lerp(0.035f, if (isDarkTheme) 0.20f else 0.18f, clampedScrollProgress)
+    val brightnessAlpha = lerp(0f, if (isDarkTheme) 0.20f else 0.18f, clampedScrollProgress)
     return BottomBarGlassMaterialSpec(
         blurRadiusDp = lerp(7f, 6f, activity),
         vibrancy = false,
