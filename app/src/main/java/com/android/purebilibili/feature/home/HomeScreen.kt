@@ -701,7 +701,7 @@ fun HomeScreen(
                 CardPositionManager.lastClickedCardBounds != null &&
                 CardPositionManager.isCardFullyVisible
 
-            // 先解除“返回中”状态，避免后续埋点统计导致首页手势恢复滞后。
+            // 先清除"返回中"状态，让后续 LaunchedEffect 恢复底栏
             returnAnimationStartElapsedMs = 0L
             onVideoDetailReturnAnimationConsumed()
 
@@ -907,6 +907,13 @@ fun HomeScreen(
             delay(restoreDelayMs)
         }
         isHomeContentInteractionRestored = true
+    }
+
+    //  共享元素动画完成后恢复底栏，底栏与封面同步落位
+    LaunchedEffect(isReturningFromVideoDetail, isVideoNavigating, bottomBarVisible) {
+        if (isReturningFromVideoDetail || !isVideoNavigating || bottomBarVisible) return@LaunchedEffect
+        setBottomBarVisible(true)
+        isVideoNavigating = false
     }
     
     //  [新增] 滚动方向检测状态（用于上滑隐藏模式）
@@ -1115,7 +1122,6 @@ fun HomeScreen(
             }
         }
     }
-    var bottomBarRestoreJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var topTabsRevealJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
     //  包装 onVideoClick：点击视频时先隐藏底栏再导航
@@ -1855,9 +1861,10 @@ fun HomeScreen(
     }
 
     
-    //  [修复] 使用生命周期事件控制底栏可见性
-    // ON_START: 恢复底栏（仅在从视频页返回时）
-    // ON_STOP: 隐藏底栏（导航到其他页面时，避免影响导航栏区域）
+    //  使用生命周期事件：
+    // ON_START: 记录返回时间戳、恢复顶部标签页 + 非视频返回底栏立即恢复
+    // ON_STOP: 清理定时器
+    // 视频返回的底栏恢复统一由动画完成 LaunchedEffect 处理，避免独立计时与动画不同步
     val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, useSideNavigation) {
         if (useSideNavigation) {
@@ -1888,29 +1895,14 @@ fun HomeScreen(
                             delayTopTabsUntilCardSettled = false
                         }
                     }
-                    //  关键修复：只在底栏当前隐藏时才恢复可见
-                    if (!bottomBarVisible && isVideoNavigating) {
-                        val bottomBarRestoreDelayMs = resolveBottomBarRestoreDelayMs(
-                            cardTransitionEnabled = cardTransitionEnabled,
-                            isQuickReturnFromDetail = isQuickReturningFromVideoDetail
-                        )
-                        val resetNavigationDelayMs = if (cardTransitionEnabled) 200L else 80L
-                        bottomBarRestoreJob = kotlinx.coroutines.MainScope().launch {
-                            kotlinx.coroutines.delay(bottomBarRestoreDelayMs)
-                            setBottomBarVisible(true)
-                            kotlinx.coroutines.delay(resetNavigationDelayMs)
-                            isVideoNavigating = false
-                        }
-                    } else if (!bottomBarVisible && !isVideoNavigating) {
-                        //  [新增] 从设置等非视频页面返回时，立即显示底栏（无延迟）
+                    //  底栏由动画完成 LaunchedEffect 统一恢复，此处不再独立计时
+                    if (!bottomBarVisible && !isVideoNavigating) {
+                        //  从设置等非视频页面返回时，立即显示底栏（无延迟）
                         setBottomBarVisible(true)
                     }
                 }
                 androidx.lifecycle.Lifecycle.Event.ON_STOP -> {
-                    //  [修复] 移除此处隐藏底栏的逻辑
-                    //  防止切换到其他Tab（如动态/历史）时底栏消失
-                    bottomBarRestoreJob?.cancel()
-                    bottomBarRestoreJob = null
+                    topTabsRevealJob?.cancel()
                     // setBottomBarVisible(false) // REMOVED
                 }
                 else -> { /* 其他事件不处理 */ }
@@ -1918,7 +1910,6 @@ fun HomeScreen(
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
-            bottomBarRestoreJob?.cancel()
             topTabsRevealJob?.cancel()
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
@@ -2081,15 +2072,6 @@ internal fun resolveReturnAnimationSuppressionDurationMs(
     }
     if (!cardAnimationEnabled) return 220L
     return if (isTabletLayout) 220L else 240L
-}
-
-internal fun resolveBottomBarRestoreDelayMs(
-    cardTransitionEnabled: Boolean,
-    isQuickReturnFromDetail: Boolean
-): Long {
-    if (!cardTransitionEnabled) return 150L
-    if (isQuickReturnFromDetail) return 340L
-    return 380L
 }
 
 internal fun resolveHomeContentInteractionRestoreDelayMs(

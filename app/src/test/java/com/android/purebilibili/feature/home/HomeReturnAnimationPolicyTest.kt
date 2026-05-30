@@ -76,31 +76,6 @@ class HomeReturnAnimationPolicyTest {
     }
 
     @Test
-    fun bottomBarRestoreDelay_respectsTransitionMode() {
-        assertEquals(
-            150L,
-            resolveBottomBarRestoreDelayMs(
-                cardTransitionEnabled = false,
-                isQuickReturnFromDetail = false
-            )
-        )
-        assertEquals(
-            340L,
-            resolveBottomBarRestoreDelayMs(
-                cardTransitionEnabled = true,
-                isQuickReturnFromDetail = true
-            )
-        )
-        assertEquals(
-            380L,
-            resolveBottomBarRestoreDelayMs(
-                cardTransitionEnabled = true,
-                isQuickReturnFromDetail = false
-            )
-        )
-    }
-
-    @Test
     fun contentInteractionRestore_doesNotWaitForSharedElementSuppression() {
         assertEquals(
             0L,

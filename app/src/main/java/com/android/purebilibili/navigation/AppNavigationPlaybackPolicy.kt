@@ -29,6 +29,7 @@ internal fun shouldAutoReleaseBottomBarRevealOnVideoReturn(
     activeBottomTabRoute: String?
 ): Boolean {
     if (!isReturningFromDetail) return false
+    // 首页由 HomeScreen 动画完成 LaunchedEffect 恢复底栏，不在 AppNavigation 层面计时
     if (activeBottomTabRoute == ScreenRoutes.Home.route) return false
     return isVideoCardReturnTargetRoute(activeBottomTabRoute)
 }
@@ -36,11 +37,7 @@ internal fun shouldAutoReleaseBottomBarRevealOnVideoReturn(
 internal fun resolveVideoReturnBottomBarRestoreDelayMs(
     cardTransitionEnabled: Boolean,
     isQuickReturnFromDetail: Boolean
-): Long {
-    if (!cardTransitionEnabled) return 150L
-    if (isQuickReturnFromDetail) return 340L
-    return 380L
-}
+): Long = 0L
 
 internal fun resolveVideoReturnBottomBarHideSuppressionMs(
     cardTransitionEnabled: Boolean
