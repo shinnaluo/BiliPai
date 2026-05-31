@@ -66,6 +66,8 @@ internal fun HomeTopTabChrome(
     isTabsCollapsed: Boolean = false,
     onTabsCollapsedChange: ((Boolean) -> Unit)? = null,
     drawChromeSurface: Boolean = true,
+    useBottomBarMatchedSurface: Boolean = false,
+    drawMatchedShellLens: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val density = LocalDensity.current
@@ -135,20 +137,35 @@ internal fun HomeTopTabChrome(
                 )
                 .then(
                     if (drawChromeSurface) {
-                        Modifier.homeTopChromeSurface(
-                            renderMode = tabChromeRenderMode,
-                            shape = tabShape,
-                            surfaceColor = tabSurfaceColor,
-                            hazeState = hazeState,
-                            backdrop = backdrop,
-                            liquidStyle = liquidStyle,
-                            liquidGlassTuning = liquidGlassTuning,
-                            motionTier = motionTier,
-                            isScrolling = isScrolling,
-                            isTransitionRunning = isTransitionRunning,
-                            forceLowBlurBudget = forceLowBlurBudget,
-                            preferFlatGlass = preferFlatGlass
-                        )
+                        if (useBottomBarMatchedSurface) {
+                            Modifier.homeTopBottomBarMatchedSurface(
+                                renderMode = tabChromeRenderMode,
+                                shape = tabShape,
+                                hazeState = hazeState,
+                                backdrop = backdrop,
+                                liquidGlassStyle = liquidStyle,
+                                liquidGlassTuning = liquidGlassTuning,
+                                motionTier = motionTier,
+                                isTransitionRunning = isTransitionRunning,
+                                forceLowBlurBudget = forceLowBlurBudget,
+                                drawShellLens = drawMatchedShellLens
+                            )
+                        } else {
+                            Modifier.homeTopChromeSurface(
+                                renderMode = tabChromeRenderMode,
+                                shape = tabShape,
+                                surfaceColor = tabSurfaceColor,
+                                hazeState = hazeState,
+                                backdrop = backdrop,
+                                liquidStyle = liquidStyle,
+                                liquidGlassTuning = liquidGlassTuning,
+                                motionTier = motionTier,
+                                isScrolling = isScrolling,
+                                isTransitionRunning = isTransitionRunning,
+                                forceLowBlurBudget = forceLowBlurBudget,
+                                preferFlatGlass = preferFlatGlass
+                            )
+                        }
                     } else {
                         Modifier
                     }

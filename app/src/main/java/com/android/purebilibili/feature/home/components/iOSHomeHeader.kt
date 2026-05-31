@@ -38,24 +38,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.zIndex
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import com.kyant.backdrop.backdrops.LayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import com.android.purebilibili.core.util.FormatUtils
 import com.android.purebilibili.core.util.HapticType
 import com.android.purebilibili.core.util.iOSTapEffect
 import com.android.purebilibili.core.util.rememberHapticFeedback
 import com.android.purebilibili.feature.home.UserState
 import com.android.purebilibili.core.theme.iOSSystemGray
-import com.android.purebilibili.core.theme.iOSRed
 import com.android.purebilibili.core.store.LiquidGlassStyle
 import dev.chrisbanes.haze.HazeState
 import com.android.purebilibili.core.ui.blur.shouldAllowDirectHazeLiquidGlassFallback
@@ -2053,7 +2048,7 @@ fun iOSHomeHeader(
             isTabFloating = if (useUnifiedTopPanel) false else isTabFloating,
             effectiveTabShadowElevation = if (useUnifiedTopPanel) 0.dp else effectiveTabShadowElevation,
             tabShape = if (useUnifiedTopPanel) {
-                AppShapes.container(ContainerLevel.Pill)
+                resolveSharedBottomBarCapsuleShape()
             } else {
                 tabShape
             },
@@ -2094,8 +2089,9 @@ fun iOSHomeHeader(
             gestureEnabled = topTabsVisible && !isHeaderCollapseEnabled,
             isTabsCollapsed = topTabsCollapsed,
             onTabsCollapsedChange = onTopTabsCollapsedChange,
-            drawChromeSurface = !useUnifiedTopPanel &&
-                drawTopTabOuterChromeSurface
+            drawChromeSurface = drawTopTabOuterChromeSurface,
+            useBottomBarMatchedSurface = useUnifiedTopPanel && useUnifiedLiquidChrome,
+            drawMatchedShellLens = useUnifiedTopPanel && useUnifiedLiquidChrome
         ) {
             CategoryTabRow(
                 categories = topCategories,
@@ -2119,7 +2115,7 @@ fun iOSHomeHeader(
                 backdrop = backdrop,
                 isFloatingStyle = isTabFloating,
                 edgeToEdge = integratedCollapsedTopBar,
-                hasOuterChromeSurface = !useUnifiedTopPanel && drawTopTabOuterChromeSurface,
+                hasOuterChromeSurface = drawTopTabOuterChromeSurface,
                 interactionBudget = interactionBudget,
                 motionTier = motionTier,
                 isTransitionRunning = isTransitionRunning,
@@ -2374,39 +2370,20 @@ fun iOSHomeHeader(
                                             }
                                         )
                                 ) {
-                                    if (user.isLogin && user.face.isNotEmpty()) {
-                                        AsyncImage(
-                                            model = ImageRequest.Builder(LocalContext.current)
-                                                .data(FormatUtils.fixImageUrl(user.face))
-                                                .crossfade(true).build(),
-                                            contentDescription = "用户头像",
-                                            modifier = Modifier.fillMaxSize()
-                                        )
-                                    } else {
-                                        Box(
-                                            Modifier
-                                                .fillMaxSize()
-                                                .background(
-                                                    if (useUnifiedTopPanel) {
-                                                        if (useUnifiedLiquidChrome) {
-                                                            Color.Transparent
-                                                        } else {
-                                                            topForegroundColor.copy(alpha = 0.10f)
-                                                        }
-                                                    } else {
-                                                        headerChromeColors.containerColor
-                                                    }
-                                                ),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                "未",
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
+                                    HomeTopAvatarContent(
+                                        user = user,
+                                        shape = edgeButtonShape,
+                                        fallbackBackgroundColor = if (useUnifiedTopPanel) {
+                                            if (useUnifiedLiquidChrome) {
+                                                Color.Transparent
+                                            } else {
+                                                topForegroundColor.copy(alpha = 0.10f)
+                                            }
+                                        } else {
+                                            headerChromeColors.containerColor
+                                        },
+                                        fallbackTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 }
                             }
 
@@ -2436,27 +2413,16 @@ fun iOSHomeHeader(
                                     Color.White.copy(alpha = 0.96f)
                                 }
                                 val searchPillContent: @Composable () -> Unit = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            searchIcon,
-                                            contentDescription = "搜索",
-                                            tint = stableSearchContentColor,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(resolveHomeTopSearchIconTextGap(uiPreset, androidNativeVariant)))
-                                        Text(
-                                            text = "搜索视频、UP主...",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontSize = if (uiPreset == UiPreset.MD3) {
-                                                if (isTablet) 15.sp else 14.sp
-                                            } else {
-                                                if (isTablet) 16.sp else 15.sp
-                                            },
-                                            fontWeight = if (uiPreset == UiPreset.MD3) FontWeight.Normal else FontWeight.Normal,
-                                            color = stableSearchContentColor,
-                                            maxLines = 1
-                                        )
-                                    }
+                                    HomeTopSearchPillContent(
+                                        searchIcon = searchIcon,
+                                        contentColor = stableSearchContentColor,
+                                        textFontSize = if (uiPreset == UiPreset.MD3) {
+                                            if (isTablet) 15.sp else 14.sp
+                                        } else {
+                                            if (isTablet) 16.sp else 15.sp
+                                        },
+                                        iconTextGap = resolveHomeTopSearchIconTextGap(uiPreset, androidNativeVariant)
+                                    )
                                 }
                                 val searchClickInteractionSource = remember { MutableInteractionSource() }
                                 val defaultSearchSurfaceColor = if (useUnifiedTopPanel) {
@@ -2708,38 +2674,17 @@ fun iOSHomeHeader(
                                     )
                                 }
                                 if (topRightUnreadBadge != null) {
-                                    Box(
+                                    HomeTopUnreadBadge(
+                                        text = topRightUnreadBadge,
+                                        layout = topRightUnreadBadgeLayout,
+                                        borderColor = AppSurfaceTokens.cardContainer(),
                                         modifier = Modifier
                                             .align(Alignment.TopEnd)
                                             .offset(
                                                 x = topRightUnreadBadgeLayout.offsetX,
                                                 y = topRightUnreadBadgeLayout.offsetY
                                             )
-                                            .defaultMinSize(
-                                                minWidth = topRightUnreadBadgeLayout.minWidth,
-                                                minHeight = topRightUnreadBadgeLayout.minHeight
-                                            )
-                                            .background(iOSRed, CircleShape)
-                                            .border(
-                                                width = 1.dp,
-                                                color = AppSurfaceTokens.cardContainer(),
-                                                shape = CircleShape
-                                            )
-                                            .padding(
-                                                horizontal = topRightUnreadBadgeLayout.horizontalPadding,
-                                                vertical = topRightUnreadBadgeLayout.verticalPadding
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = topRightUnreadBadge,
-                                            color = Color.White,
-                                            fontSize = 11.sp,
-                                            lineHeight = 12.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            maxLines = 1
-                                        )
-                                    }
+                                    )
                                 }
                             }
                         }

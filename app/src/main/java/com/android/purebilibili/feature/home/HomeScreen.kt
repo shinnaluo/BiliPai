@@ -1114,9 +1114,8 @@ fun HomeScreen(
             }
     }
     
-    // [Feature] Sticky Header Options
-    // If true, header will shrink but stay visible. If false, it scrolls away.
-    val isHeaderCollapseEnabled = homeSettings.isHeaderCollapseEnabled // Enable shrinking based on settings
+    // 顶部搜索行默认随内容上滑收起；标签 dock 保持可见，便于继续切换分区。
+    val isHeaderCollapseEnabled = shouldAutoCollapseHomeSearchRow()
     val areTopTabsAutoCollapsed by remember(headerOffsetHeightPx, isHeaderCollapseEnabled) {
         derivedStateOf {
             resolveHomeTopTabsAutoCollapsed(
@@ -1631,7 +1630,7 @@ fun HomeScreen(
         
         // Calculate parameters based on scroll
         // 1. Search Bar Collapse (First phase)
-        val topTabsCollapsedForHeader = if (isHeaderCollapseEnabled) {
+        val topTabsCollapsedForHeader = if (isHeaderCollapseEnabled && shouldCollapseHomeTopTabsWithSearchRow()) {
             areTopTabsAutoCollapsed
         } else {
             areTopTabsManuallyCollapsed

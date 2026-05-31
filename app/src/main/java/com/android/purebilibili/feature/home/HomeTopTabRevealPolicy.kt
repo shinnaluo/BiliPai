@@ -18,3 +18,7 @@ fun resolveHomeTopTabsVisible(
     if (isReturningFromDetail) return true
     return !isDelayedForCardSettle && !isForwardNavigatingToDetail
 }
+
+internal fun shouldAutoCollapseHomeSearchRow(): Boolean = true
+
+internal fun shouldCollapseHomeTopTabsWithSearchRow(): Boolean = false

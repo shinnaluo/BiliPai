@@ -123,4 +123,10 @@ class HomeTopTabRevealPolicyTest {
             )
         )
     }
+
+    @Test
+    fun defaultScrollBehavior_collapsesSearchRowButKeepsTopTabsDockVisible() {
+        assertTrue(shouldAutoCollapseHomeSearchRow())
+        assertFalse(shouldCollapseHomeTopTabsWithSearchRow())
+    }
 }

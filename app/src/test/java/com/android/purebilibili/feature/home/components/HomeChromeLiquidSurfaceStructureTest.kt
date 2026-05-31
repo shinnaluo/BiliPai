@@ -58,18 +58,30 @@ class HomeChromeLiquidSurfaceStructureTest {
             topHeaderMatchedSurfaceCalls > 0
         )
         assertTrue(
-            "all matched top header controls should disable the full-shell lens that creates a center refraction seam",
-            topHeaderDisabledShellLensCalls >= topHeaderMatchedSurfaceCalls
+            "search and edge controls should still disable the full-shell lens while the top tab dock may use the bottom-bar shell lens",
+            topHeaderDisabledShellLensCalls >= topHeaderMatchedSurfaceCalls - 1
         )
         assertTrue(
             "top tab row should only treat chrome as external when the outer surface is actually drawn",
-            topHeaderSource.contains("hasOuterChromeSurface = !useUnifiedTopPanel && drawTopTabOuterChromeSurface")
+            topHeaderSource.contains("hasOuterChromeSurface = drawTopTabOuterChromeSurface")
         )
         assertTrue(
-            "home header should suppress the nested top tab chrome when the unified top panel already draws it",
-            topHeaderSource.contains("drawChromeSurface = !useUnifiedTopPanel &&") &&
-                topHeaderSource.contains("drawTopTabOuterChromeSurface") &&
-                topTabChrome.readText().contains("drawChromeSurface: Boolean = true")
+            "home header should draw a bottom-bar matched dock around top tabs inside the unified top panel",
+            topHeaderSource.contains("drawChromeSurface = drawTopTabOuterChromeSurface") &&
+                topHeaderSource.contains("useBottomBarMatchedSurface = useUnifiedTopPanel && useUnifiedLiquidChrome") &&
+                topHeaderSource.contains("tabShape = if (useUnifiedTopPanel)") &&
+                topHeaderSource.contains("resolveSharedBottomBarCapsuleShape()") &&
+                topTabChrome.readText().contains("useBottomBarMatchedSurface: Boolean = false") &&
+                topTabChrome.readText().contains(".homeTopBottomBarMatchedSurface(")
+        )
+        assertTrue(
+            "home top avatar, search content and unread badge should live in extracted top-control components",
+            componentsDir.resolve("HomeTopControls.kt").readText().contains("HomeTopAvatarContent(") &&
+                componentsDir.resolve("HomeTopControls.kt").readText().contains("HomeTopSearchPillContent(") &&
+                componentsDir.resolve("HomeTopControls.kt").readText().contains("HomeTopUnreadBadge(") &&
+                topHeaderSource.contains("HomeTopAvatarContent(") &&
+                topHeaderSource.contains("HomeTopSearchPillContent(") &&
+                topHeaderSource.contains("HomeTopUnreadBadge(")
         )
         assertTrue(
             "top tabs should render after the search layer so expanded state matches the reference screenshot",
