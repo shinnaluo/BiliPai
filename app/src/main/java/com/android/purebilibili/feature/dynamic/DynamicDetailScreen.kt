@@ -178,6 +178,12 @@ fun DynamicDetailScreen(
                                     android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             },
+                            onDeleteClick = { action ->
+                                interactionViewModel.deleteDynamic(action) { success, msg ->
+                                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                                    if (success) onBack()
+                                }
+                            },
                             isLiked = likedDynamics.contains(state.item.id_str)
                         )
                     }

@@ -51,6 +51,8 @@ import com.android.purebilibili.feature.dynamic.resolveDynamicCardOuterPadding
 import com.android.purebilibili.data.model.response.DynamicStatModule
 import com.android.purebilibili.data.model.response.DynamicType
 import com.android.purebilibili.data.model.response.OpusContentBlock
+import com.android.purebilibili.feature.dynamic.DynamicDeleteAction
+import com.android.purebilibili.feature.dynamic.resolveDynamicDeleteAction
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 /**
@@ -73,6 +75,7 @@ fun DynamicCardV2(
     onRepostClick: (dynamicId: String) -> Unit = {},
     onLikeClick: (dynamicId: String) -> Unit = {},
     onWatchLaterClick: ((aid: Long) -> Unit)? = null,
+    onDeleteClick: ((DynamicDeleteAction) -> Unit)? = null,
     isLiked: Boolean = false
 ) {
     val author = item.modules.module_author
@@ -102,12 +105,38 @@ fun DynamicCardV2(
     val type = DynamicType.fromApiValue(item.type)
     val cardClickAction = remember(item) { resolveDynamicCardPrimaryAction(item) }
     val watchLaterAid = remember(item) { resolveDynamicWatchLaterAid(item) }
+    val deleteAction = remember(item) { resolveDynamicDeleteAction(item) }
+    var pendingDeleteAction by remember(item.id_str) { mutableStateOf<DynamicDeleteAction?>(null) }
     val isPrimaryClickEnabled = remember(cardClickAction, onArticleClick, onDynamicDetailClick, onPrimaryClickOverride) {
         shouldEnableDynamicCardPrimaryClick(
             action = cardClickAction,
             hasArticleClick = onArticleClick != null,
             hasDynamicDetailClick = onDynamicDetailClick != null,
             hasPrimaryClickOverride = onPrimaryClickOverride != null
+        )
+    }
+
+    pendingDeleteAction?.let { action ->
+        AlertDialog(
+            onDismissRequest = { pendingDeleteAction = null },
+            icon = { Icon(CupertinoIcons.Default.Trash, contentDescription = null) },
+            title = { Text(action.title) },
+            text = { Text(action.content) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        pendingDeleteAction = null
+                        onDeleteClick?.invoke(action)
+                    }
+                ) {
+                    Text(action.confirmText, color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDeleteAction = null }) {
+                    Text(action.cancelText)
+                }
+            }
         )
     }
 
@@ -236,6 +265,24 @@ fun DynamicCardV2(
                                 onClick = {
                                     showMoreMenu = false
                                     onWatchLaterClick(watchLaterAid)
+                                }
+                            )
+                        }
+
+                        if (deleteAction != null && onDeleteClick != null) {
+                            DropdownMenuItem(
+                                text = { Text(deleteAction.label, color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = {
+                                    Icon(
+                                        CupertinoIcons.Default.Trash,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp),
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                },
+                                onClick = {
+                                    showMoreMenu = false
+                                    pendingDeleteAction = deleteAction
                                 }
                             )
                         }

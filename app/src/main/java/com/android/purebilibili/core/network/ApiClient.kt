@@ -1350,6 +1350,13 @@ data class DynamicWebRepostSource(
     val dyn_id_str: String
 )
 
+@kotlinx.serialization.Serializable
+data class DynamicDeleteRequest(
+    val dyn_id_str: String,
+    val dyn_type: Int? = null,
+    val rid_str: String? = null
+)
+
 internal fun buildDynamicRepostRequest(
     dynamicId: String,
     content: String
@@ -1479,6 +1486,13 @@ interface DynamicApi {
         @Query("x-bili-device-req-json") deviceRequestJson: String = "{\"platform\":\"web\",\"device\":\"pc\"}",
         @Query("x-bili-web-req-json") webRequestJson: String = "{\"spm_id\":\"333.1330\"}",
         @retrofit2.http.Body body: DynamicRepostRequest
+    ): SimpleApiResponse
+
+    @retrofit2.http.POST("x/dynamic/feed/operate/remove")
+    suspend fun deleteDynamic(
+        @Query("csrf") csrf: String,
+        @Query("platform") platform: String = "web",
+        @retrofit2.http.Body body: DynamicDeleteRequest
     ): SimpleApiResponse
 }
 

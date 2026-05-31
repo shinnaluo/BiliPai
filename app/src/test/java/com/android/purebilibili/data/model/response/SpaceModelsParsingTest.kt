@@ -448,4 +448,57 @@ class SpaceModelsParsingTest {
             orig?.modules?.module_dynamic?.desc?.rich_text_nodes?.first()?.orig_text
         )
     }
+
+    @Test
+    fun decodeSpaceDynamicResponse_acceptsDeleteThreePointItem() {
+        val payload = """
+            {
+              "code": 0,
+              "message": "0",
+              "data": {
+                "items": [
+                  {
+                    "id_str": "1063487284684259332",
+                    "type": "DYNAMIC_TYPE_FORWARD",
+                    "modules": {
+                      "module_more": {
+                        "three_point_items": [
+                          {
+                            "label": "删除",
+                            "modal": {
+                              "cancel": "取消",
+                              "confirm": "确认删除",
+                              "content": "动态删除后将无法恢复，请谨慎操作",
+                              "title": "要删除动态吗？"
+                            },
+                            "params": {
+                              "dyn_id_str": "1063487284684259332",
+                              "dyn_type": 1,
+                              "rid_str": "1063487284684259332"
+                            },
+                            "type": "THREE_POINT_DELETE"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+        """.trimIndent()
+
+        val response = json.decodeFromString<SpaceDynamicResponse>(payload)
+        val deleteItem = response.data
+            ?.items
+            ?.single()
+            ?.modules
+            ?.module_more
+            ?.three_point_items
+            ?.single()
+
+        assertEquals("THREE_POINT_DELETE", deleteItem?.type)
+        assertEquals("确认删除", deleteItem?.modal?.confirm)
+        assertEquals("1063487284684259332", deleteItem?.params?.dyn_id_str)
+        assertEquals(1, deleteItem?.params?.dyn_type)
+    }
 }

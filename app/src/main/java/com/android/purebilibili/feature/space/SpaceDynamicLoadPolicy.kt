@@ -206,6 +206,7 @@ internal fun resolveSpaceDynamicCardItem(item: SpaceDynamicItem): DynamicItem {
                     }
                 )
             },
+            module_more = item.modules.module_more,
             module_stat = item.modules.module_stat?.let { stat ->
                 DynamicStatModule(
                     comment = StatItem(

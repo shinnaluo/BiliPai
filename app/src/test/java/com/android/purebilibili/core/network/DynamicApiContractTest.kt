@@ -70,6 +70,55 @@ class DynamicApiContractTest {
     }
 
     @Test
+    fun deleteDynamic_usesOperateRemoveJsonBodyAndWebQueries() {
+        val method = DynamicApi::class.java.methods.first { it.name == "deleteDynamic" }
+        val post = method.getAnnotation(POST::class.java)
+
+        assertEquals("x/dynamic/feed/operate/remove", post?.value)
+        assertFalse(method.isAnnotationPresent(FormUrlEncoded::class.java))
+
+        val queryNames = method.parameterAnnotations
+            .mapNotNull { annotations ->
+                annotations.filterIsInstance<Query>().firstOrNull()?.value
+            }
+
+        assertTrue("csrf" in queryNames)
+        assertTrue("platform" in queryNames)
+
+        val bodyParamIndex = method.parameterAnnotations.indexOfFirst { annotations ->
+            annotations.any { it is Body }
+        }
+        assertEquals(DynamicDeleteRequest::class.java, method.parameterTypes[bodyParamIndex])
+        assertTrue(method.parameterAnnotations.none { annotations ->
+            annotations.any { it is Field }
+        })
+    }
+
+    @Test
+    fun dynamicDeleteRequest_omitsNullOptionalFields() {
+        val request = DynamicDeleteRequest(dyn_id_str = "1063487284684259332")
+        val json = Json.encodeToString(request)
+
+        assertTrue(json.contains("\"dyn_id_str\":\"1063487284684259332\""))
+        assertFalse(json.contains("dyn_type"))
+        assertFalse(json.contains("rid_str"))
+    }
+
+    @Test
+    fun dynamicDeleteRequest_keepsDeleteMenuParamsWhenProvided() {
+        val request = DynamicDeleteRequest(
+            dyn_id_str = "1063487284684259332",
+            dyn_type = 1,
+            rid_str = "1063487284684259332"
+        )
+        val json = Json.encodeToString(request)
+
+        assertTrue(json.contains("\"dyn_id_str\":\"1063487284684259332\""))
+        assertTrue(json.contains("\"dyn_type\":1"))
+        assertTrue(json.contains("\"rid_str\":\"1063487284684259332\""))
+    }
+
+    @Test
     fun buildDynamicRepostRequest_emptyContentMatchesWebRepostPayload() {
         val request = buildDynamicRepostRequest(dynamicId = "977045888118554640", content = "")
         val json = Json.encodeToString(request)

@@ -7,6 +7,7 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.purebilibili.core.network.DynamicDeleteRequest
 import com.android.purebilibili.core.network.NetworkModule
 import com.android.purebilibili.core.network.buildDynamicRepostRequest
 import com.android.purebilibili.core.store.SettingsManager
@@ -1284,6 +1285,47 @@ class DynamicViewModel(application: Application) : AndroidViewModel(application)
                 onResult(false, e.message ?: "网络错误")
             }
         }
+    }
+
+    fun deleteDynamic(action: DynamicDeleteAction, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                if (action.dynamicId.isBlank()) {
+                    onResult(false, "无法删除该动态")
+                    return@launch
+                }
+                val csrf = com.android.purebilibili.core.store.TokenManager.csrfCache
+                if (csrf.isNullOrEmpty()) {
+                    onResult(false, "请先登录")
+                    return@launch
+                }
+
+                val response = NetworkModule.dynamicApi.deleteDynamic(
+                    csrf = csrf,
+                    body = DynamicDeleteRequest(
+                        dyn_id_str = action.dynamicId,
+                        dyn_type = action.dynType,
+                        rid_str = action.rid
+                    )
+                )
+                if (response.code == 0) {
+                    removeDynamicFromUiState(action.dynamicId)
+                    onResult(true, "已删除动态")
+                } else {
+                    onResult(false, response.message.ifBlank { "删除失败" })
+                }
+            } catch (e: Exception) {
+                onResult(false, e.message ?: "网络错误")
+            }
+        }
+    }
+
+    private fun removeDynamicFromUiState(dynamicId: String) {
+        val currentState = _uiState.value
+        _uiState.value = currentState.copy(
+            items = currentState.items.filterNot { it.id_str == dynamicId },
+            userItems = currentState.userItems.filterNot { it.id_str == dynamicId }
+        )
     }
 
     companion object {

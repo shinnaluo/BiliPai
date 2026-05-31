@@ -160,6 +160,7 @@ object DynamicModulesFlexibleSerializer : KSerializer<DynamicModules> {
                     merged = merged.copy(
                         module_author = parsed.module_author ?: merged.module_author,
                         module_dynamic = parsed.module_dynamic ?: merged.module_dynamic,
+                        module_more = parsed.module_more ?: merged.module_more,
                         module_stat = parsed.module_stat ?: merged.module_stat
                     )
 
@@ -511,7 +512,37 @@ data class DynamicBasic(
 data class DynamicModules(
     val module_author: DynamicAuthorModule? = null,
     val module_dynamic: DynamicContentModule? = null,
+    val module_more: DynamicMoreModule? = null,
     val module_stat: DynamicStatModule? = null
+)
+
+@Serializable
+data class DynamicMoreModule(
+    val three_point_items: List<DynamicThreePointItem> = emptyList()
+)
+
+@Serializable
+data class DynamicThreePointItem(
+    val label: String = "",
+    val modal: DynamicThreePointModal? = null,
+    val params: DynamicThreePointParams? = null,
+    val type: String = ""
+)
+
+@Serializable
+data class DynamicThreePointModal(
+    val cancel: String = "",
+    val confirm: String = "",
+    val content: String = "",
+    val title: String = ""
+)
+
+@Serializable
+data class DynamicThreePointParams(
+    val dyn_id_str: String = "",
+    @Serializable(with = FlexibleIntSerializer::class)
+    val dyn_type: Int = 0,
+    val rid_str: String = ""
 )
 
 // --- 作者模块 ---

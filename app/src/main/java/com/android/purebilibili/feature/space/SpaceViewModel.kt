@@ -1222,6 +1222,13 @@ class SpaceViewModel(
         }
     }
 
+    fun removeSpaceDynamic(dynamicId: String) {
+        val current = _uiState.value as? SpaceUiState.Success ?: return
+        _uiState.value = current.copy(
+            dynamics = current.dynamics.filterNot { it.id_str == dynamicId }
+        )
+    }
+
     fun loadSpaceBangumi(refresh: Boolean = false) {
         val current = _uiState.value as? SpaceUiState.Success ?: return
         if (current.isLoadingBangumi) return

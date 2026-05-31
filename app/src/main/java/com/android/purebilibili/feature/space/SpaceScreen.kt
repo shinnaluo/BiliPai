@@ -125,6 +125,7 @@ import com.android.purebilibili.data.model.response.SpaceVideoItem
 import com.android.purebilibili.data.model.response.RelationStatData
 import com.android.purebilibili.data.model.response.UpStatData
 import com.android.purebilibili.data.model.response.VideoSortOrder
+import com.android.purebilibili.feature.dynamic.DynamicDeleteAction
 import com.android.purebilibili.feature.dynamic.DynamicViewModel
 import com.android.purebilibili.feature.dynamic.components.DynamicCardV2
 import com.android.purebilibili.feature.dynamic.components.DynamicCommentOverlayHost
@@ -397,6 +398,16 @@ fun SpaceScreen(
                                     ).show()
                                 }
                             },
+                            onSpaceDynamicDeleteClick = { action ->
+                                dynamicInteractionViewModel.deleteDynamic(action) { success, message ->
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        message,
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                    if (success) viewModel.removeSpaceDynamic(action.dynamicId)
+                                }
+                            },
                             sharedTransitionScope = sharedTransitionScope,
                             animatedVisibilityScope = animatedVisibilityScope
                         )
@@ -624,6 +635,7 @@ private fun SpaceContent(
     onSpaceDynamicCommentClick: (com.android.purebilibili.data.model.response.DynamicItem) -> Unit,
     onSpaceDynamicRepostClick: (String) -> Unit,
     onSpaceDynamicLikeClick: (String) -> Unit,
+    onSpaceDynamicDeleteClick: (DynamicDeleteAction) -> Unit,
     sharedTransitionScope: SharedTransitionScope?,
     animatedVisibilityScope: AnimatedVisibilityScope?,
     modifier: Modifier = Modifier
@@ -1117,6 +1129,7 @@ private fun SpaceContent(
                             onCommentClick = { onSpaceDynamicCommentClick(dynamic) },
                             onRepostClick = onSpaceDynamicRepostClick,
                             onLikeClick = onSpaceDynamicLikeClick,
+                            onDeleteClick = onSpaceDynamicDeleteClick,
                             isLiked = likedDynamics.contains(dynamic.id_str)
                         )
                     }

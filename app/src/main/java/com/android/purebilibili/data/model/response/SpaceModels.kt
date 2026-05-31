@@ -561,6 +561,7 @@ data class SpaceDynamicItem(
 data class SpaceDynamicModules(
     val module_author: SpaceDynamicAuthor? = null,
     val module_dynamic: SpaceDynamicContent? = null,
+    val module_more: DynamicMoreModule? = null,
     val module_stat: SpaceDynamicStat? = null
 )
 

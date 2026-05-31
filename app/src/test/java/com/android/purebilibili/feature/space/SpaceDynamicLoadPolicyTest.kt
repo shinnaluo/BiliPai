@@ -13,6 +13,9 @@ import com.android.purebilibili.data.model.response.SpaceDynamicOpus
 import com.android.purebilibili.data.model.response.SpaceDynamicOpusSummary
 import com.android.purebilibili.data.model.response.DynamicMajorBadge
 import com.android.purebilibili.data.model.response.DynamicBasic
+import com.android.purebilibili.data.model.response.DynamicMoreModule
+import com.android.purebilibili.data.model.response.DynamicThreePointItem
+import com.android.purebilibili.data.model.response.DynamicThreePointParams
 import com.android.purebilibili.data.model.response.SpaceDynamicCount
 import com.android.purebilibili.data.model.response.SpaceDynamicStat
 import com.android.purebilibili.feature.dynamic.DynamicCommentTarget
@@ -77,6 +80,35 @@ class SpaceDynamicLoadPolicyTest {
 
         assertEquals(listOf("3"), filterSpaceDynamicItemsByQuery(items, "旅行").map { it.id_str })
         assertEquals(listOf("3"), filterSpaceDynamicItemsByQuery(items, "海边").map { it.id_str })
+    }
+
+    @Test
+    fun resolveSpaceDynamicCardItem_preservesDeleteMenuParams() {
+        val item = SpaceDynamicItem(
+            id_str = "1063487284684259332",
+            modules = SpaceDynamicModules(
+                module_more = DynamicMoreModule(
+                    three_point_items = listOf(
+                        DynamicThreePointItem(
+                            label = "删除",
+                            type = "THREE_POINT_DELETE",
+                            params = DynamicThreePointParams(
+                                dyn_id_str = "1063487284684259332",
+                                dyn_type = 1,
+                                rid_str = "1063487284684259332"
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        val dynamic = resolveSpaceDynamicCardItem(item)
+        val params = dynamic.modules.module_more?.three_point_items?.single()?.params
+
+        assertEquals("1063487284684259332", params?.dyn_id_str)
+        assertEquals(1, params?.dyn_type)
+        assertEquals("1063487284684259332", params?.rid_str)
     }
 
     @Test

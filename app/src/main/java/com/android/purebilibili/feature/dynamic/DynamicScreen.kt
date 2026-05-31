@@ -587,6 +587,11 @@ fun DynamicScreen(
                                                     android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
                                                 }
                                             },
+                                            onDeleteClick = { action ->
+                                                viewModel.deleteDynamic(action) { _, msg ->
+                                                    android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                                                }
+                                            },
                                             likedDynamics = likedDynamics,
                                             modifier = Modifier
                                                 .then(dynamicTabSwipeModifier)
@@ -676,6 +681,11 @@ fun DynamicScreen(
                                          },
                                          onWatchLaterClick = { aid ->
                                              viewModel.addToWatchLater(aid) { _, msg ->
+                                                 android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+                                             }
+                                         },
+                                         onDeleteClick = { action ->
+                                             viewModel.deleteDynamic(action) { _, msg ->
                                                  android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
                                              }
                                          },
@@ -896,6 +906,7 @@ private fun DynamicList(
     onRepostClick: (String) -> Unit = {},
     onLikeClick: (String) -> Unit = {},
     onWatchLaterClick: (Long) -> Unit = {},
+    onDeleteClick: (DynamicDeleteAction) -> Unit = {},
     likedDynamics: Set<String> = emptySet(),
     modifier: Modifier = Modifier
 ) {
@@ -912,6 +923,7 @@ private fun DynamicList(
             onRepostClick = onRepostClick,
             onLikeClick = onLikeClick,
             onWatchLaterClick = onWatchLaterClick,
+            onDeleteClick = onDeleteClick,
             isLiked = likedDynamics.contains(item.id_str)
         )
     }
