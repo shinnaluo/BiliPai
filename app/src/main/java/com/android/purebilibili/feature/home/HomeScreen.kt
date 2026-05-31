@@ -57,7 +57,6 @@ import com.android.purebilibili.core.theme.LocalUiPreset
 import com.android.purebilibili.core.theme.BiliPink
 import com.android.purebilibili.feature.settings.GITHUB_URL
 import com.android.purebilibili.core.store.SettingsManager //  引入 SettingsManager
-import com.android.purebilibili.core.store.HomeTopTabSettings
 import com.android.purebilibili.core.store.AppNavigationSettings
 import com.android.purebilibili.core.store.resolveEffectiveHomeSettings
 import com.android.purebilibili.core.store.resolveEffectiveLiquidGlassEnabled
@@ -282,21 +281,14 @@ fun HomeScreen(
         }
     }
 
-    // [P2] 顶栏自定义：顺序与可见项从设置读取
+    // 顶部标签按参考图强制固定为六项，避免历史偏好或外观预设回退到三标签/分区按钮样式。
     val defaultTopTabIds = remember { resolveDefaultHomeTopTabIds() }
-    val topTabSettings by SettingsManager.getHomeTopTabSettings(context).collectAsState(
-        initial = HomeTopTabSettings(
-            orderIds = defaultTopTabIds,
-            visibleIds = defaultTopTabIds.toSet()
-        ),
-        context = kotlin.coroutines.EmptyCoroutineContext
-    )
     // [Refactor] Hoist PagerState to be available for both Content and Header
     // 确保 pagerState 在所有作用域均可见，以便传给 iOSHomeHeader
-    val topTabEntries = remember(topTabSettings) {
+    val topTabEntries = remember(defaultTopTabIds) {
         resolveHomeTopTabEntries(
-            customOrderIds = topTabSettings.orderIds,
-            visibleIds = topTabSettings.visibleIds
+            customOrderIds = defaultTopTabIds,
+            visibleIds = defaultTopTabIds.toSet()
         )
     }
     val localizedTopTabLabels = topTabEntries.map { entry ->
