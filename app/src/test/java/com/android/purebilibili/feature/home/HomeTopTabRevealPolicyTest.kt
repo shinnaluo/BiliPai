@@ -113,6 +113,46 @@ class HomeTopTabRevealPolicyTest {
     }
 
     @Test
+    fun videoReturnCleanup_runsAfterReturnEvenIfBottomBarWasAlreadyRestored() {
+        assertTrue(
+            shouldRestoreHomeBottomBarAfterVideoReturn(
+                isReturningFromDetail = false,
+                isVideoNavigating = true,
+                pendingBottomBarRestoreAfterReturn = true
+            )
+        )
+    }
+
+    @Test
+    fun videoReturnCleanup_waitsUntilReturnAnimationConsumed() {
+        assertFalse(
+            shouldRestoreHomeBottomBarAfterVideoReturn(
+                isReturningFromDetail = true,
+                isVideoNavigating = true,
+                pendingBottomBarRestoreAfterReturn = true
+            )
+        )
+    }
+
+    @Test
+    fun videoReturnCleanup_ignoresNormalHomeEntry() {
+        assertFalse(
+            shouldRestoreHomeBottomBarAfterVideoReturn(
+                isReturningFromDetail = false,
+                isVideoNavigating = false,
+                pendingBottomBarRestoreAfterReturn = true
+            )
+        )
+        assertFalse(
+            shouldRestoreHomeBottomBarAfterVideoReturn(
+                isReturningFromDetail = false,
+                isVideoNavigating = true,
+                pendingBottomBarRestoreAfterReturn = false
+            )
+        )
+    }
+
+    @Test
     fun returningFromDetail_keepsCollapsedTopTabsHidden() {
         assertFalse(
             resolveHomeTopTabsVisible(
