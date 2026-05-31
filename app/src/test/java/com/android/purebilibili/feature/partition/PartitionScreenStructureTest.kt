@@ -94,6 +94,28 @@ class PartitionScreenStructureTest {
     }
 
     @Test
+    fun `side rail label mode follows top tab display modes`() {
+        assertTrue(shouldShowPartitionSideRailIcon(labelMode = 0))
+        assertTrue(shouldShowPartitionSideRailText(labelMode = 0))
+        assertTrue(shouldShowPartitionSideRailIcon(labelMode = 1))
+        assertFalse(shouldShowPartitionSideRailText(labelMode = 1))
+        assertFalse(shouldShowPartitionSideRailIcon(labelMode = 2))
+        assertTrue(shouldShowPartitionSideRailText(labelMode = 2))
+    }
+
+    @Test
+    fun `side rail item content is centered without manual left spacer`() {
+        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/partition/PartitionScreen.kt")
+        val itemSource = source
+            .substringAfter("private fun PartitionSideRailItem(")
+            .substringBefore("internal fun shouldStartPartitionSideRailIndicatorDrag(")
+
+        assertTrue(itemSource.contains("horizontalAlignment = Alignment.CenterHorizontally"))
+        assertTrue(itemSource.contains("textAlign = TextAlign.Center"))
+        assertFalse(itemSource.contains("Spacer(modifier = Modifier.width(14.dp))"))
+    }
+
+    @Test
     fun `video list push follows long press drag then can return to rest`() {
         assertTrue(
             resolvePartitionVideoListPushPx(

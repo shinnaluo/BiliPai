@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -88,8 +89,11 @@ import com.android.purebilibili.feature.home.components.resolveBottomBarLiquidGl
 import com.android.purebilibili.feature.home.components.resolveBottomBarRefractionMotionProfile
 import com.android.purebilibili.feature.home.components.resolveSharedBottomBarCapsuleShape
 import com.android.purebilibili.feature.home.components.rememberBottomBarIndicatorDragScaleProgress
+import com.android.purebilibili.feature.home.components.normalizeTopTabLabelMode
 import com.android.purebilibili.feature.home.components.resolveSegmentedControlMotionProgress
 import com.android.purebilibili.feature.home.components.resolveSegmentedControlMotionSpec
+import com.android.purebilibili.feature.home.components.shouldShowTopTabIcon
+import com.android.purebilibili.feature.home.components.shouldShowTopTabText
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import dev.chrisbanes.haze.HazeState
@@ -151,6 +155,15 @@ private val partitionTabs = listOf(
 private val PartitionSideRailItemHeight = 48.dp
 private val PartitionSideRailItemSpacing = 4.dp
 private val PartitionVideoListMaxPush = 20.dp
+
+internal fun resolvePartitionSideRailLabelMode(requestedLabelMode: Int): Int =
+    normalizeTopTabLabelMode(requestedLabelMode)
+
+internal fun shouldShowPartitionSideRailIcon(labelMode: Int): Boolean =
+    shouldShowTopTabIcon(resolvePartitionSideRailLabelMode(labelMode))
+
+internal fun shouldShowPartitionSideRailText(labelMode: Int): Boolean =
+    shouldShowTopTabText(resolvePartitionSideRailLabelMode(labelMode))
 
 data class PartitionFeedUiState(
     val selectedPartition: PartitionCategory = partitionTabs.first(),
@@ -355,6 +368,7 @@ fun PartitionContent(
             PartitionSideRail(
                 partitions = partitionTabs,
                 selectedId = state.selectedPartition.id,
+                labelMode = homeSettings.topTabLabelMode,
                 modifier = Modifier.width(92.dp),
                 contentPadding = PaddingValues(
                     start = startPadding,
@@ -389,6 +403,7 @@ fun PartitionContent(
 private fun PartitionSideRail(
     partitions: List<PartitionCategory>,
     selectedId: Int,
+    labelMode: Int,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues,
     liquidGlassIndicatorEnabled: Boolean,
@@ -399,6 +414,9 @@ private fun PartitionSideRail(
     val selectedIndex = partitions.indexOfFirst { it.id == selectedId }.coerceAtLeast(0)
     val density = LocalDensity.current
     val motionSpec = remember { resolveSegmentedControlMotionSpec() }
+    val resolvedLabelMode = resolvePartitionSideRailLabelMode(labelMode)
+    val showIcon = shouldShowPartitionSideRailIcon(resolvedLabelMode)
+    val showText = shouldShowPartitionSideRailText(resolvedLabelMode)
     val dragState = rememberDampedDragAnimationState(
         initialIndex = selectedIndex,
         itemCount = partitions.size,
@@ -463,6 +481,8 @@ private fun PartitionSideRail(
                         itemIndex = index,
                         indicatorPosition = dragState.value
                     ),
+                    showIcon = showIcon,
+                    showText = showText,
                     onClick = { onPartitionSelected(partition) }
                 )
             }
@@ -565,6 +585,8 @@ private fun PartitionSideRailItem(
     partition: PartitionCategory,
     selected: Boolean,
     selectionProgress: Float,
+    showIcon: Boolean,
+    showText: Boolean,
     onClick: () -> Unit
 ) {
     val selectedColor = MaterialTheme.colorScheme.primary
@@ -583,34 +605,53 @@ private fun PartitionSideRailItem(
                 onClick = onClick
             )
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .matchParentSize()
                 .padding(horizontal = 4.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Spacer(modifier = Modifier.width(14.dp))
-            Text(
-                text = partition.name,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                fontSize = 16.sp,
-                lineHeight = 20.sp,
-                fontWeight = if (selected || clampedSelectionProgress > 0.5f) {
-                    FontWeight.SemiBold
-                } else {
-                    FontWeight.Medium
-                },
-                color = when {
-                    clampedSelectionProgress > 0f -> lerp(
-                        unselectedColor,
-                        selectedColor,
-                        clampedSelectionProgress
-                    )
-                    pressed -> MaterialTheme.colorScheme.onSurface
-                    else -> unselectedColor
-                }
-            )
+            val contentColor = when {
+                clampedSelectionProgress > 0f -> lerp(
+                    unselectedColor,
+                    selectedColor,
+                    clampedSelectionProgress
+                )
+                pressed -> MaterialTheme.colorScheme.onSurface
+                else -> unselectedColor
+            }
+            if (showIcon) {
+                Text(
+                    text = partition.emoji,
+                    maxLines = 1,
+                    textAlign = TextAlign.Center,
+                    fontSize = if (showText) 15.sp else 22.sp,
+                    lineHeight = if (showText) 16.sp else 24.sp,
+                    color = contentColor,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            if (showIcon && showText) {
+                Spacer(modifier = Modifier.height(1.dp))
+            }
+            if (showText) {
+                Text(
+                    text = partition.name,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    fontSize = if (showIcon) 12.sp else 16.sp,
+                    lineHeight = if (showIcon) 14.sp else 20.sp,
+                    fontWeight = if (selected || clampedSelectionProgress > 0.5f) {
+                        FontWeight.SemiBold
+                    } else {
+                        FontWeight.Medium
+                    },
+                    color = contentColor,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }

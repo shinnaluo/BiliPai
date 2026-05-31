@@ -971,31 +971,7 @@ private fun LightweightHomeTopTabs(
                 }
                 LazyRow(
                     state = listState,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .topTabIndicatorLongPressDrag(
-                            dragState = topTabDragState,
-                            itemWidthPx = with(density) { itemWidth.toPx() },
-                            indicatorWidthPx = with(density) {
-                                if (effectiveRenderer == HomeTopTabRenderer.IOS) {
-                                    itemWidth.toPx()
-                                } else {
-                                    md3IndicatorWidth.toPx().coerceAtLeast(48.dp.toPx())
-                                }
-                            },
-                            contentPaddingPx = with(density) {
-                                if (effectiveRenderer == HomeTopTabRenderer.IOS) 2.dp.toPx() else 0f
-                            },
-                            rowScrollOffsetPx = { rowScrollOffsetPx },
-                            currentIndicatorPosition = {
-                                if (topTabDragActive) topTabDragState.value else safeSelectedIndex.toFloat()
-                            },
-                            currentSelectedIndex = safeSelectedIndex,
-                            itemCount = categories.size,
-                            onDragEngaged = {
-                                topTabIndicatorDragEngaged = true
-                            }
-                        ),
+                    modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start,
                     contentPadding = PaddingValues(horizontal = if (effectiveRenderer == HomeTopTabRenderer.IOS) 2.dp else 0.dp)
@@ -1018,6 +994,18 @@ private fun LightweightHomeTopTabs(
                         } else {
                             Modifier
                         }
+                        val gestureItemModifier = if (index == safeSelectedIndex) {
+                            measuredItemModifier.topTabSelectedItemLongPressDrag(
+                                dragState = topTabDragState,
+                                itemWidthPx = with(density) { itemWidth.toPx() },
+                                itemCount = categories.size,
+                                onDragEngaged = {
+                                    topTabIndicatorDragEngaged = true
+                                }
+                            )
+                        } else {
+                            measuredItemModifier
+                        }
                         LightweightTopTabItem(
                             renderer = effectiveRenderer,
                             category = category,
@@ -1033,7 +1021,7 @@ private fun LightweightHomeTopTabs(
                             drawContainer = drawItemContainer,
                             skinIconPaths = topTabSkinIconPaths[categoryKey.trim().uppercase()],
                             hasSkinStickerIcon = hasSkinStickerIcons,
-                            modifier = measuredItemModifier,
+                            modifier = gestureItemModifier,
                             onClick = {
                                 performHomeTopBarTap(haptic = haptic, onClick = {
                                     when (resolveTopTabClickAction(index, selectedIndex)) {
@@ -1525,40 +1513,20 @@ internal fun shouldStartTopTabIndicatorLongPressDrag(
     return pointerX in indicatorLeftPx..(indicatorLeftPx + indicatorWidthPx)
 }
 
-private fun Modifier.topTabIndicatorLongPressDrag(
+private fun Modifier.topTabSelectedItemLongPressDrag(
     dragState: DampedDragAnimationState,
     itemWidthPx: Float,
-    indicatorWidthPx: Float,
-    contentPaddingPx: Float,
-    rowScrollOffsetPx: () -> Float,
-    currentIndicatorPosition: () -> Float,
-    currentSelectedIndex: Int,
     itemCount: Int,
     onDragEngaged: () -> Unit
 ): Modifier = pointerInput(
     dragState,
     itemWidthPx,
-    indicatorWidthPx,
-    contentPaddingPx,
-    currentSelectedIndex,
     itemCount
 ) {
     val velocityTracker = VelocityTracker()
     awaitPointerEventScope {
         while (true) {
             val down = awaitFirstDown(requireUnconsumed = false)
-            if (!shouldStartTopTabIndicatorLongPressDrag(
-                    pointerX = down.position.x,
-                    indicatorPosition = currentIndicatorPosition(),
-                    itemWidthPx = itemWidthPx,
-                    rowScrollOffsetPx = rowScrollOffsetPx(),
-                    contentPaddingPx = contentPaddingPx,
-                    indicatorWidthPx = indicatorWidthPx
-                )
-            ) {
-                continue
-            }
-
             val longPress = awaitLongPressOrCancellation(down.id) ?: continue
             longPress.consume()
             onDragEngaged()

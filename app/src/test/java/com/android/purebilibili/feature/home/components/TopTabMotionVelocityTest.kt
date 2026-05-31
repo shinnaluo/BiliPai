@@ -1,7 +1,10 @@
 package com.android.purebilibili.feature.home.components
 
 import androidx.compose.ui.graphics.Color
+import java.io.File
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TopTabMotionVelocityTest {
@@ -220,6 +223,17 @@ class TopTabMotionVelocityTest {
     }
 
     @Test
+    fun `top tab long press drag is attached to selected item instead of lazy row scroll container`() {
+        val source = loadSource("app/src/main/java/com/android/purebilibili/feature/home/components/TopBar.kt")
+        val lazyRowSource = source
+            .substringAfter("LazyRow(")
+            .substringBefore("itemsIndexed(")
+
+        assertTrue(source.contains("topTabSelectedItemLongPressDrag("))
+        assertFalse(lazyRowSource.contains("topTabSelectedItemLongPressDrag("))
+    }
+
+    @Test
     fun `ios capsule uses moving shared container instead of per item fill`() {
         assertEquals(
             false,
@@ -293,5 +307,15 @@ class TopTabMotionVelocityTest {
         )
 
         assertEquals(TopTabScrollTarget(firstVisibleItemIndex = 1, firstVisibleItemScrollOffsetPx = 0), target)
+    }
+
+    private fun loadSource(path: String): String {
+        val normalizedPath = path.removePrefix("app/")
+        val sourceFile = listOf(
+            File(path),
+            File(normalizedPath)
+        ).firstOrNull { it.exists() }
+        require(sourceFile != null) { "Cannot locate $path from ${File(".").absolutePath}" }
+        return sourceFile.readText()
     }
 }
