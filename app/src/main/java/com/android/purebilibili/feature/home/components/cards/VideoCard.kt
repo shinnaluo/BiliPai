@@ -66,6 +66,8 @@ import com.android.purebilibili.core.ui.components.UpBadgeName
 import com.android.purebilibili.core.ui.components.resolveUpStatsText
 import com.android.purebilibili.core.ui.transition.LocalVideoCardSharedElementSourceRoute
 import com.android.purebilibili.core.ui.transition.VIDEO_SHARED_COVER_ASPECT_RATIO
+import com.android.purebilibili.core.ui.transition.VideoSharedTransitionMotionSpec
+import com.android.purebilibili.core.ui.transition.VideoSharedTransitionVisualSpec
 import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransitionMotionSpec
 import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionOwnership
 import com.android.purebilibili.core.ui.transition.resolveVideoSharedTransitionVisualSpec
@@ -73,8 +75,10 @@ import com.android.purebilibili.core.ui.transition.shouldEnableVideoCoverSharedT
 import com.android.purebilibili.core.ui.transition.videoCoverSharedElementKey
 import com.android.purebilibili.feature.home.resolveHomeCardEnterAnimationEnabledAtMount
 import com.android.purebilibili.feature.home.resolveHomeCardInfoSurfaceAppearance
-import com.android.purebilibili.feature.home.rememberHomeGlassPillColors
+import com.android.purebilibili.feature.home.HomeGlassPillStyle
+import com.android.purebilibili.feature.home.HomeGlassResolvedColors
 import com.android.purebilibili.feature.home.resolveHomeGlassCoverPillBaseColor
+import com.android.purebilibili.feature.home.resolveHomeGlassPillStyle
 import com.android.purebilibili.feature.video.controller.PlaybackProgressManager
 import com.android.purebilibili.feature.video.ui.section.resolvePublishTimeRowText
 import com.android.purebilibili.feature.video.ui.section.shouldEmphasizePrecisePublishTime
@@ -139,6 +143,17 @@ private data class VideoCardTexts(
     val durationBadgeMinWidth: androidx.compose.ui.unit.Dp
 )
 
+private data class VideoCardPillColors(
+    val cover: HomeGlassResolvedColors,
+    val emphasizedCover: HomeGlassResolvedColors,
+    val inline: HomeGlassResolvedColors
+)
+
+private data class VideoCardSharedTransitionSpecs(
+    val motion: VideoSharedTransitionMotionSpec,
+    val visual: VideoSharedTransitionVisualSpec
+)
+
 internal data class HomeVideoCardMetadataColors(
     val upNameColor: Color,
     val upMetaColor: Color,
@@ -156,6 +171,51 @@ internal fun resolveHomeVideoCardMetadataColors(
         upBadgeTextColor = onSurfaceColor.copy(alpha = 0.68f),
         upBadgeBackgroundColor = onSurfaceColor.copy(alpha = 0.10f),
         publishTimeColor = onSurfaceColor.copy(alpha = 0.72f)
+    )
+}
+
+private fun resolveVideoCardPillColors(
+    glassEnabled: Boolean,
+    blurEnabled: Boolean,
+    inlineBaseColor: Color
+): VideoCardPillColors {
+    val coverBaseColor = resolveHomeGlassCoverPillBaseColor()
+    return VideoCardPillColors(
+        cover = resolveVideoCardPillColors(
+            style = resolveHomeGlassPillStyle(
+                glassEnabled = glassEnabled,
+                blurEnabled = blurEnabled,
+                emphasized = false
+            ),
+            baseColor = coverBaseColor
+        ),
+        emphasizedCover = resolveVideoCardPillColors(
+            style = resolveHomeGlassPillStyle(
+                glassEnabled = glassEnabled,
+                blurEnabled = blurEnabled,
+                emphasized = true
+            ),
+            baseColor = coverBaseColor
+        ),
+        inline = resolveVideoCardPillColors(
+            style = resolveHomeGlassPillStyle(
+                glassEnabled = glassEnabled,
+                blurEnabled = blurEnabled,
+                emphasized = false
+            ),
+            baseColor = inlineBaseColor
+        )
+    )
+}
+
+private fun resolveVideoCardPillColors(
+    style: HomeGlassPillStyle,
+    baseColor: Color
+): HomeGlassResolvedColors {
+    return HomeGlassResolvedColors(
+        containerColor = baseColor.copy(alpha = style.containerAlpha),
+        borderColor = Color.White.copy(alpha = style.borderAlpha),
+        highlightColor = Color.White.copy(alpha = style.highlightAlpha)
     )
 }
 
@@ -238,24 +298,17 @@ fun ElegantVideoCard(
     val primaryStatText = cardTexts.primaryStatText
     val secondaryStatText = cardTexts.secondaryStatText
     val durationBadgeMinWidth = cardTexts.durationBadgeMinWidth
-    val coverPillColors = rememberHomeGlassPillColors(
-        glassEnabled = glassEnabled,
-        blurEnabled = blurEnabled,
-        emphasized = false,
-        baseColor = resolveHomeGlassCoverPillBaseColor()
-    )
-    val emphasizedCoverPillColors = rememberHomeGlassPillColors(
-        glassEnabled = glassEnabled,
-        blurEnabled = blurEnabled,
-        emphasized = true,
-        baseColor = resolveHomeGlassCoverPillBaseColor()
-    )
-    val inlinePillColors = rememberHomeGlassPillColors(
-        glassEnabled = glassEnabled,
-        blurEnabled = blurEnabled,
-        emphasized = false,
-        baseColor = AppSurfaceTokens.cardContainer()
-    )
+    val inlinePillBaseColor = AppSurfaceTokens.cardContainer()
+    val pillColors = remember(glassEnabled, blurEnabled, inlinePillBaseColor) {
+        resolveVideoCardPillColors(
+            glassEnabled = glassEnabled,
+            blurEnabled = blurEnabled,
+            inlineBaseColor = inlinePillBaseColor
+        )
+    }
+    val coverPillColors = pillColors.cover
+    val emphasizedCoverPillColors = pillColors.emphasizedCover
+    val inlinePillColors = pillColors.inline
     val isDarkCardTheme = AppSurfaceTokens.chromeBackground().luminance() < 0.5f
     val infoSurfaceAppearance = remember(wallpaperTintEnabled, wallpaperEffectMode, isDarkCardTheme, isDataSaverActive) {
         resolveHomeCardInfoSurfaceAppearance(
@@ -447,22 +500,24 @@ fun ElegantVideoCard(
             coverSharedEnabled = coverSharedEnabled,
             isQuickReturnLimited = isQuickReturnLimited
         )
-        val homeSharedTransitionMotionSpec = remember(effectiveSharedElementSourceRoute, transitionEnabled) {
-            resolveVideoCardSharedTransitionMotionSpec(
-                sourceRoute = effectiveSharedElementSourceRoute,
-                transitionEnabled = transitionEnabled
-            )
-        }
-        val homeSharedTransitionVisualSpec = remember(
+        val homeSharedTransitionSpecs = remember(
             effectiveSharedElementSourceRoute,
             transitionEnabled,
             cardCornerRadius
         ) {
-            resolveVideoSharedTransitionVisualSpec(
-                sourceRoute = effectiveSharedElementSourceRoute,
-                sourceCornerDp = cardCornerRadius.value.roundToInt()
+            VideoCardSharedTransitionSpecs(
+                motion = resolveVideoCardSharedTransitionMotionSpec(
+                    sourceRoute = effectiveSharedElementSourceRoute,
+                    transitionEnabled = transitionEnabled
+                ),
+                visual = resolveVideoSharedTransitionVisualSpec(
+                    sourceRoute = effectiveSharedElementSourceRoute,
+                    sourceCornerDp = cardCornerRadius.value.roundToInt()
+                )
             )
         }
+        val homeSharedTransitionMotionSpec = homeSharedTransitionSpecs.motion
+        val homeSharedTransitionVisualSpec = homeSharedTransitionSpecs.visual
         val useCoverOnlySharedBounds = coverSharedEnabled && !effectiveSharedElementSourceRoute.isNullOrBlank()
         val connectedCardShape = remember(cardCornerRadius) { RoundedCornerShape(cardCornerRadius) }
         val cardContainerModifier = remember(

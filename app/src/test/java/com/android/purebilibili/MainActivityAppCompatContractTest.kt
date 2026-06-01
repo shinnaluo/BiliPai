@@ -278,9 +278,11 @@ class MainActivityAppCompatContractTest {
         val themeSource = loadThemeSource()
 
         assertTrue(
-            Regex(
-                """SettingsManager\.getAppLanguage\(context\)\.collectAsStateWithLifecycle\(\s*initialValue = SettingsManager\.getAppLanguageSync\(context\)\s*\)"""
-            ).containsMatchIn(mainActivitySource),
+            mainActivitySource.contains(".getAppThemeSettings(context)"),
+            "MainActivity should collect startup theme settings through one DataStore Flow"
+        )
+        assertTrue(
+            mainActivitySource.contains("initialValue = SettingsManager.getInitialAppThemeSettings(context)"),
             "MainActivity should bootstrap appLanguage from cached settings to avoid locale flip-flop during recreation"
         )
         assertTrue(
@@ -288,11 +290,12 @@ class MainActivityAppCompatContractTest {
             "Theme root should build a miuix ThemeController"
         )
         assertTrue(
-            mainActivitySource.contains("getUiPreset(context)"),
+            mainActivitySource.contains("appThemeSettings.uiPreset"),
             "MainActivity should keep reading UiPreset when iOS and Android Native presets are available again"
         )
         assertTrue(
-            mainActivitySource.contains("collectAsStateWithLifecycle(initialValue = UiPreset.MD3)"),
+            mainActivitySource.contains("AppThemeSettings(") ||
+                mainActivitySource.contains("getInitialAppThemeSettings(context)"),
             "MainActivity should bootstrap first install with the MD3 preset"
         )
     }

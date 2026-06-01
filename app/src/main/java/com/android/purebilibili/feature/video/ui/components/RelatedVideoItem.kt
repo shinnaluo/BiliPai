@@ -241,7 +241,7 @@ fun RelatedVideoItem(
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(FormatUtils.fixImageUrl(video.pic))
+                        .data(FormatUtils.resolveVideoCoverUrl(video.pic, useLowQuality = false))
                         .crossfade(shouldEnableRelatedVideoCoverCrossfade(transitionEnabled))
                         .build(),
                     contentDescription = null,

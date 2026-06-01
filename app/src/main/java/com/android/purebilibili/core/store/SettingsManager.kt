@@ -50,7 +50,6 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -63,7 +62,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 import kotlin.math.abs
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 // 声明 DataStore 扩展属性
 internal val Context.settingsDataStore by preferencesDataStore(name = "settings_prefs")
@@ -410,6 +408,28 @@ data class HomeSettings(
         get() = isBottomBarLiquidGlassEnabled
 }
 
+data class AppThemeSettings(
+    val uiPreset: UiPreset = UiPreset.MD3,
+    val androidNativeVariant: AndroidNativeVariant = AndroidNativeVariant.MATERIAL3,
+    val themeMode: AppThemeMode = AppThemeMode.FOLLOW_SYSTEM,
+    val darkThemeStyle: DarkThemeStyle = DarkThemeStyle.DEFAULT,
+    val appLanguage: AppLanguage = AppLanguage.FOLLOW_SYSTEM,
+    val md3ColorSource: Md3ColorSource = Md3ColorSource.FOLLOW_WALLPAPER,
+    val md3CustomColorHex: String = "#007AFF",
+    val colorStyle: PaletteStyle = PaletteStyle.TonalSpot,
+    val colorSpec: ColorSpec.SpecVersion = ColorSpec.SpecVersion.SPEC_2021,
+    val themeColorIndex: Int = 0,
+    val appFontSizePreset: AppFontSizePreset = AppFontSizePreset.DEFAULT,
+    val appFontFileName: String = "",
+    val appUiScalePreset: AppUiScalePreset = AppUiScalePreset.STANDARD,
+    val appDpiOverridePercent: Int = 0,
+    val appGestureScreenshotEnabled: Boolean = false,
+    val appScreenshotGestureMode: AppScreenshotGestureMode =
+        AppScreenshotGestureMode.TOP_RIGHT_TWO_FINGER_LONG_PRESS,
+    val appScreenshotCaptureMode: AppScreenshotCaptureMode =
+        AppScreenshotCaptureMode.FULL_WINDOW
+)
+
 enum class BottomBarSearchAutoExpandMode(val value: Int, val label: String) {
     EXPAND_WHEN_SCROLLING_DOWN(0, "下滑展开"),
     EXPAND_AT_HOME_TOP(1, "顶部展开"),
@@ -708,6 +728,10 @@ private class StringShareablePreferenceDefinition(
 
 internal fun mapHomeSettingsFromPreferences(preferences: Preferences): HomeSettings {
     return SettingsManager.mapHomeSettingsFromPreferences(preferences)
+}
+
+internal fun mapAppThemeSettingsFromPreferences(preferences: Preferences): AppThemeSettings {
+    return SettingsManager.mapAppThemeSettingsFromPreferences(preferences)
 }
 
 internal fun mapDanmakuSettingsFromPreferences(
@@ -1307,6 +1331,63 @@ object SettingsManager {
         context.settingsDataStore.edit { preferences -> preferences[KEY_HW_DECODE] = value }
         // 同步播放器创建路径的内存/SharedPreferences 缓存，避免切换后仍按旧解码设置建播放器。
         PlayerSettingsCache.setHwDecodeEnabled(context, value)
+    }
+
+    internal fun mapAppThemeSettingsFromPreferences(preferences: Preferences): AppThemeSettings {
+        val rawDpiOverride = preferences[KEY_APP_DPI_OVERRIDE_PERCENT] ?: 0
+        return AppThemeSettings(
+            uiPreset = resolveUiPresetPreferenceValue(preferences[KEY_UI_PRESET]),
+            androidNativeVariant = resolveAndroidNativeVariantPreferenceValue(
+                preferences[KEY_ANDROID_NATIVE_VARIANT]
+            ),
+            themeMode = resolveThemeModePreference(
+                preferences[KEY_THEME_MODE] ?: AppThemeMode.FOLLOW_SYSTEM.value
+            ),
+            darkThemeStyle = resolveDarkThemeStylePreference(
+                darkThemeStyleValue = preferences[KEY_DARK_THEME_STYLE],
+                legacyThemeModeValue = preferences[KEY_THEME_MODE]
+            ),
+            appLanguage = resolveAppLanguagePreference(preferences[KEY_APP_LANGUAGE]),
+            md3ColorSource = resolveMd3ColorSourcePreference(
+                sourceValue = preferences[KEY_MD3_COLOR_SOURCE],
+                legacyDynamicColorEnabled = preferences[KEY_DYNAMIC_COLOR]
+            ),
+            md3CustomColorHex = normalizeMd3CustomColorHex(preferences[KEY_MD3_CUSTOM_COLOR_HEX]),
+            colorStyle = resolvePaletteStylePreference(preferences[KEY_THEME_COLOR_STYLE]),
+            colorSpec = resolveColorSpecPreference(preferences[KEY_THEME_COLOR_SPEC]),
+            themeColorIndex = normalizeThemeColorIndex(preferences[KEY_THEME_COLOR_INDEX] ?: 0),
+            appFontSizePreset = AppFontSizePreset.fromValue(
+                preferences[KEY_APP_FONT_SIZE_PRESET] ?: AppFontSizePreset.DEFAULT.value
+            ),
+            appFontFileName = preferences[KEY_APP_FONT_FILE_NAME].orEmpty(),
+            appUiScalePreset = AppUiScalePreset.fromValue(
+                preferences[KEY_APP_UI_SCALE_PRESET] ?: AppUiScalePreset.STANDARD.value
+            ),
+            appDpiOverridePercent = if (rawDpiOverride == 0) {
+                0
+            } else {
+                rawDpiOverride.coerceIn(85, 115)
+            },
+            appGestureScreenshotEnabled = preferences[KEY_APP_GESTURE_SCREENSHOT_ENABLED] ?: false,
+            appScreenshotGestureMode = AppScreenshotGestureMode.fromValue(
+                preferences[KEY_APP_SCREENSHOT_GESTURE_MODE]
+                    ?: AppScreenshotGestureMode.TOP_RIGHT_TWO_FINGER_LONG_PRESS.value
+            ),
+            appScreenshotCaptureMode = AppScreenshotCaptureMode.fromValue(
+                preferences[KEY_APP_SCREENSHOT_CAPTURE_MODE]
+                    ?: AppScreenshotCaptureMode.FULL_WINDOW.value
+            )
+        )
+    }
+
+    fun getAppThemeSettings(context: Context): Flow<AppThemeSettings> = context.settingsDataStore.data
+        .map(::mapAppThemeSettingsFromPreferences)
+        .distinctUntilChanged()
+
+    fun getInitialAppThemeSettings(context: Context): AppThemeSettings {
+        return AppThemeSettings(
+            appLanguage = getAppLanguageSync(context)
+        )
     }
 
     // --- Theme Mode ---

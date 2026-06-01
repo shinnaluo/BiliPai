@@ -74,6 +74,15 @@ class RelatedVideoItemPolicyTest {
     }
 
     @Test
+    fun `related video cover uses shared CDN sizing policy`() {
+        val source = File("src/main/java/com/android/purebilibili/feature/video/ui/components/RelatedVideoItem.kt")
+            .readText()
+
+        assertTrue(source.contains("FormatUtils.resolveVideoCoverUrl(video.pic, useLowQuality = false)"))
+        assertFalse(source.contains("FormatUtils.fixImageUrl(video.pic)"))
+    }
+
+    @Test
     fun `press haptic is disabled for related cards`() {
         assertFalse(
             shouldTriggerRelatedVideoPressHaptic(

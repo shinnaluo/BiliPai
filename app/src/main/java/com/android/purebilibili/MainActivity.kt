@@ -68,9 +68,6 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.core.coroutines.AppScope
-import com.android.purebilibili.core.theme.AndroidNativeVariant
-import com.android.purebilibili.core.theme.AppFontSizePreset
-import com.android.purebilibili.core.theme.AppUiScalePreset
 import com.android.purebilibili.core.theme.BiliPink
 import com.android.purebilibili.core.theme.LocalDisplayMetricsSnapshot
 import com.android.purebilibili.core.theme.PureBiliBiliTheme
@@ -91,12 +88,8 @@ import com.android.purebilibili.feature.settings.AppUpdateDownloadState
 import com.android.purebilibili.feature.settings.AppUpdateDownloadStatus
 import com.android.purebilibili.feature.settings.AppUpdateInstallAction
 import com.android.purebilibili.feature.settings.AppLanguage
-import com.android.purebilibili.feature.settings.AppThemeMode
-import com.android.purebilibili.feature.settings.DarkThemeStyle
-import com.android.purebilibili.feature.settings.Md3ColorSource
 import com.android.purebilibili.feature.settings.applyAppLanguage
 import com.android.purebilibili.core.theme.resolveEffectiveDynamicColorEnabled
-import com.android.purebilibili.core.theme.UiPreset
 import com.android.purebilibili.core.theme.buildDisplayMetricsSnapshot
 import com.android.purebilibili.core.ui.IOSAlertDialog
 import com.android.purebilibili.core.ui.IOSDialogAction
@@ -120,7 +113,6 @@ import com.android.purebilibili.feature.settings.shouldRunAppEntryAutoCheck
 import com.android.purebilibili.feature.settings.resolveThemePreferenceState
 import com.android.purebilibili.core.theme.resolveMd3DynamicColorEnabled
 import com.android.purebilibili.feature.screenshot.AppScreenshotCaptureMode
-import com.android.purebilibili.feature.screenshot.AppScreenshotGestureMode
 import com.android.purebilibili.feature.screenshot.AppScreenshotGestureBlockState
 import com.android.purebilibili.feature.screenshot.AppScreenshotResult
 import com.android.purebilibili.feature.screenshot.AppScreenshotSavedImage
@@ -142,8 +134,6 @@ import com.android.purebilibili.feature.video.ui.overlay.MiniPlayerOverlay
 import com.android.purebilibili.navigation.AppNavigation
 import com.android.purebilibili.navigation.ScreenRoutes
 import com.android.purebilibili.navigation.VideoRoute
-import com.materialkolor.PaletteStyle
-import com.materialkolor.dynamiccolor.ColorSpec
 import dev.chrisbanes.haze.haze
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
@@ -1057,46 +1047,33 @@ open class MainActivity : AppCompatActivity() {
             // val prefs = remember { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
             // var showWelcome by remember { mutableStateOf(!prefs.getBoolean(KEY_FIRST_LAUNCH, false)) }
 
-            // 1. 获取存储的模式 (默认为跟随系统)
-            val uiPreset by SettingsManager.getUiPreset(context).collectAsStateWithLifecycle(initialValue = UiPreset.MD3)
-            val androidNativeVariant by SettingsManager.getAndroidNativeVariant(context).collectAsStateWithLifecycle(initialValue = AndroidNativeVariant.MATERIAL3
-            )
-            val themeMode by SettingsManager.getThemeMode(context).collectAsStateWithLifecycle(initialValue = AppThemeMode.FOLLOW_SYSTEM)
-            val darkThemeStyle by SettingsManager.getDarkThemeStyle(context).collectAsStateWithLifecycle(initialValue = DarkThemeStyle.DEFAULT)
-            val appLanguage by SettingsManager.getAppLanguage(context).collectAsStateWithLifecycle(initialValue = SettingsManager.getAppLanguageSync(context)
-            )
+            val appThemeSettings by SettingsManager
+                .getAppThemeSettings(context)
+                .collectAsStateWithLifecycle(
+                    initialValue = SettingsManager.getInitialAppThemeSettings(context)
+                )
+            val uiPreset = appThemeSettings.uiPreset
+            val androidNativeVariant = appThemeSettings.androidNativeVariant
+            val themeMode = appThemeSettings.themeMode
+            val darkThemeStyle = appThemeSettings.darkThemeStyle
+            val appLanguage = appThemeSettings.appLanguage
 
             //  检查并请求所有文件访问权限 (Android 11+)
             //  检查并请求所有文件访问权限 (已移除启动时强制检查，改为按需申请)
             // LaunchedEffect(Unit) { ... }
 
-            //  2. [新增] 获取动态取色设置 (默认为 true)
-            val md3ColorSource by SettingsManager.getMd3ColorSource(context).collectAsStateWithLifecycle(initialValue = Md3ColorSource.FOLLOW_WALLPAPER
-            )
-            val md3CustomColorHex by SettingsManager.getMd3CustomColorHex(context).collectAsStateWithLifecycle(initialValue = "#007AFF"
-            )
-            val colorStyle by SettingsManager.getThemeColorStyle(context).collectAsStateWithLifecycle(initialValue = PaletteStyle.TonalSpot
-            )
-            val colorSpec by SettingsManager.getThemeColorSpec(context).collectAsStateWithLifecycle(initialValue = ColorSpec.SpecVersion.SPEC_2021
-            )
-            
-            //  3. [新增] 获取主题色索引
-            val themeColorIndex by SettingsManager.getThemeColorIndex(context).collectAsStateWithLifecycle(initialValue = 0)
-            val appFontSizePreset by SettingsManager.getAppFontSizePreset(context).collectAsStateWithLifecycle(initialValue = AppFontSizePreset.DEFAULT
-            )
-            val appFontFileName by SettingsManager.getAppFontFileName(context).collectAsStateWithLifecycle(initialValue = "")
-            val appUiScalePreset by SettingsManager.getAppUiScalePreset(context).collectAsStateWithLifecycle(initialValue = AppUiScalePreset.STANDARD
-            )
-            val appDpiOverridePercent by SettingsManager.getAppDpiOverridePercent(context).collectAsStateWithLifecycle(initialValue = 0)
-            val appGestureScreenshotEnabled by SettingsManager
-                .getAppGestureScreenshotEnabled(context)
-                .collectAsStateWithLifecycle(initialValue = false)
-            val appScreenshotGestureMode by SettingsManager
-                .getAppScreenshotGestureMode(context)
-                .collectAsStateWithLifecycle(initialValue = AppScreenshotGestureMode.TOP_RIGHT_TWO_FINGER_LONG_PRESS)
-            val appScreenshotCaptureMode by SettingsManager
-                .getAppScreenshotCaptureMode(context)
-                .collectAsStateWithLifecycle(initialValue = AppScreenshotCaptureMode.FULL_WINDOW)
+            val md3ColorSource = appThemeSettings.md3ColorSource
+            val md3CustomColorHex = appThemeSettings.md3CustomColorHex
+            val colorStyle = appThemeSettings.colorStyle
+            val colorSpec = appThemeSettings.colorSpec
+            val themeColorIndex = appThemeSettings.themeColorIndex
+            val appFontSizePreset = appThemeSettings.appFontSizePreset
+            val appFontFileName = appThemeSettings.appFontFileName
+            val appUiScalePreset = appThemeSettings.appUiScalePreset
+            val appDpiOverridePercent = appThemeSettings.appDpiOverridePercent
+            val appGestureScreenshotEnabled = appThemeSettings.appGestureScreenshotEnabled
+            val appScreenshotGestureMode = appThemeSettings.appScreenshotGestureMode
+            val appScreenshotCaptureMode = appThemeSettings.appScreenshotCaptureMode
             
             // 4. 获取系统当前的深色状态
             val systemInDark = systemInDarkThemeSnapshot
