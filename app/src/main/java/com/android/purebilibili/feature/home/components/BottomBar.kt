@@ -3015,6 +3015,9 @@ private fun KernelSuAlignedBottomBar(
         isDragging = dampedDragState.isDragging
     )
     val indicatorLayerScaleProgress = maxOf(indicatorDragScaleProgress, effectivePressProgress)
+    val indicatorSettleReboundTransform = rememberBottomBarSettleReboundTransform(
+        pulseKey = dampedDragState.settledSelectionCount + dampedDragState.settledReleaseCount
+    )
     val materialScrollProgress by animateFloatAsState(
         targetValue = if (isFeedScrollInProgress) 1f else 0f,
         animationSpec = tween(
@@ -3638,6 +3641,7 @@ private fun KernelSuAlignedBottomBar(
                     dockContentAlpha = dockContentAlpha,
                     indicatorTranslationXPx = indicatorTranslationXPx,
                     indicatorPanelOffsetPx = presetPanelOffsets.indicatorPanelOffsetPx,
+                    indicatorSettleReboundTransform = indicatorSettleReboundTransform,
                     indicatorWidth = indicatorWidth,
                     shellShape = shellShape,
                     liquidGlassPreset = liquidGlassPreset,
@@ -3863,6 +3867,7 @@ private fun BoxScope.KernelSuMiuixBottomBarIndicatorLayer(
     indicatorTranslationYPx: Float = 0f,
     indicatorPanelOffsetPx: Float,
     indicatorPanelOffsetYPx: Float = 0f,
+    indicatorSettleReboundTransform: BottomBarClickPulseTransform,
     indicatorWidth: Dp,
     indicatorHeight: Dp = 56.dp,
     shellShape: androidx.compose.ui.graphics.Shape,
@@ -3911,6 +3916,8 @@ private fun BoxScope.KernelSuMiuixBottomBarIndicatorLayer(
             .graphicsLayer {
                 translationX = indicatorTranslationXPx + indicatorPanelOffsetPx
                 translationY = indicatorTranslationYPx + indicatorPanelOffsetYPx
+                scaleX = indicatorSettleReboundTransform.scaleX
+                scaleY = indicatorSettleReboundTransform.scaleY
             }
             .width(indicatorWidth)
             .height(indicatorHeight)
