@@ -69,11 +69,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import coil.compose.AsyncImage
-import com.android.purebilibili.R
 import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.core.theme.resolveAdaptivePrimaryAccentColors
 import com.android.purebilibili.core.ui.motion.rememberSystemReduceMotion
-import com.android.purebilibili.feature.settings.getIconGroups
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -264,10 +262,7 @@ private fun OnboardingAnimatedPage(
 private fun WelcomePage(motionSpec: OnboardingMotionSpec) {
     val context = LocalContext.current
     val appIconKey by SettingsManager.getAppIcon(context).collectAsState(initial = "icon_3d")
-    val iconRes = remember(appIconKey) {
-        val allIcons = getIconGroups().flatMap { it.icons }
-        allIcons.find { it.key == appIconKey }?.iconRes ?: R.mipmap.ic_launcher_3d_foreground
-    }
+    val heroIconSpec = remember(appIconKey) { resolveOnboardingHeroIconSpec(appIconKey) }
 
     OnboardingFloatingContent(motionSpec = motionSpec) {
         Column(
@@ -275,13 +270,23 @@ private fun WelcomePage(motionSpec: OnboardingMotionSpec) {
             verticalArrangement = Arrangement.Center
         ) {
             OnboardingHeroHalo(size = 164.dp, motionSpec = motionSpec) {
-                AsyncImage(
-                    model = iconRes,
-                    contentDescription = "App Icon",
+                Box(
                     modifier = Modifier
                         .size(118.dp)
-                        .clip(RoundedCornerShape(26.dp))
-                )
+                        .clip(RoundedCornerShape(28.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AsyncImage(
+                        model = heroIconSpec.iconRes,
+                        contentDescription = "App Icon",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer {
+                                scaleX = heroIconSpec.imageScale
+                                scaleY = heroIconSpec.imageScale
+                            }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(44.dp))
