@@ -1034,7 +1034,8 @@ private fun PortraitInlineVideoPlayerHost(
             sourceRouteForSharedElement = sourceRouteForSharedElement,
             suppressSubtitleOverlay = suppressSubtitleOverlay,
             subtitleDisplayModePreferenceOverride = subtitleDisplayModePreferenceOverride,
-            onSubtitleDisplayModePreferenceOverrideChange = onSubtitleDisplayModePreferenceOverrideChange
+            onSubtitleDisplayModePreferenceOverrideChange = onSubtitleDisplayModePreferenceOverrideChange,
+            onSubtitleTrackSelected = viewModel::selectSubtitleTrack
         )
     }
 }
@@ -2966,7 +2967,8 @@ fun VideoDetailScreen(
                 sourceRouteForSharedElement = sourceRouteForSharedElement,
                 suppressSubtitleOverlay = shouldSuppressSubtitleOverlay,
                 subtitleDisplayModePreferenceOverride = subtitleDisplayModeOverride,
-                onSubtitleDisplayModePreferenceOverrideChange = { subtitleDisplayModeOverride = it }
+                onSubtitleDisplayModePreferenceOverrideChange = { subtitleDisplayModeOverride = it },
+                onSubtitleTrackSelected = viewModel::selectSubtitleTrack
             )
         } else {
                 //  沉浸式布局：视频延伸到状态栏 + 内容区域

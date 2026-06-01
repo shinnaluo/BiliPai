@@ -134,6 +134,7 @@ import com.android.purebilibili.core.util.rememberHapticFeedback
 import com.android.purebilibili.feature.screenshot.AppScreenshotGestureBlockState
 import com.android.purebilibili.feature.video.subtitle.SubtitleDisplayMode
 import com.android.purebilibili.feature.video.subtitle.SubtitleAutoPreference
+import com.android.purebilibili.feature.video.subtitle.buildSubtitleTrackOptions
 import com.android.purebilibili.feature.video.subtitle.isSubtitleFeatureEnabledForUser
 import com.android.purebilibili.feature.video.subtitle.normalizeSubtitleDisplayMode
 import com.android.purebilibili.feature.video.subtitle.normalizeSubtitleVerticalOffsetFraction
@@ -141,6 +142,7 @@ import com.android.purebilibili.feature.video.subtitle.resolveDefaultSubtitleDis
 import com.android.purebilibili.feature.video.subtitle.resolveSubtitleControlAvailability
 import com.android.purebilibili.feature.video.subtitle.resolveSubtitleDisplayModeByAutoPreference
 import com.android.purebilibili.feature.video.subtitle.resolveSubtitleTextAt
+import com.android.purebilibili.feature.video.subtitle.resolveSubtitleTrackDisplayLabel
 import com.android.purebilibili.feature.video.subtitle.shouldRenderPrimarySubtitle
 import com.android.purebilibili.feature.video.subtitle.shouldRenderSecondarySubtitle
 import com.android.purebilibili.feature.video.usecase.playPlayerFromUserAction
@@ -426,6 +428,7 @@ fun VideoPlayerSection(
     suppressSubtitleOverlay: Boolean = false,
     subtitleDisplayModePreferenceOverride: SubtitleDisplayMode? = null,
     onSubtitleDisplayModePreferenceOverrideChange: (SubtitleDisplayMode) -> Unit = {},
+    onSubtitleTrackSelected: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
     val localDensity = LocalDensity.current
@@ -3011,6 +3014,12 @@ fun VideoPlayerSection(
         val subtitleOverlayEnabled = subtitleFeatureEnabled && subtitleDisplayMode != SubtitleDisplayMode.OFF
         val subtitlePrimaryLabel = remember(uiState) {
             val success = uiState as? PlayerUiState.Success
+            val selectedTrack = success?.subtitleTracks?.firstOrNull {
+                it.trackKey == success.subtitlePrimaryTrackKey
+            }
+            if (selectedTrack != null) {
+                return@remember resolveSubtitleTrackDisplayLabel(selectedTrack)
+            }
             resolveSubtitleLanguageLabel(
                 languageCode = success?.takeIf {
                     it.subtitleOwnerBvid == it.info.bvid && it.subtitleOwnerCid == it.info.cid
@@ -3020,11 +3029,27 @@ fun VideoPlayerSection(
         }
         val subtitleSecondaryLabel = remember(uiState) {
             val success = uiState as? PlayerUiState.Success
+            val selectedTrack = success?.subtitleTracks?.firstOrNull {
+                it.trackKey == success.subtitleSecondaryTrackKey
+            }
+            if (selectedTrack != null) {
+                return@remember resolveSubtitleTrackDisplayLabel(selectedTrack)
+            }
             resolveSubtitleLanguageLabel(
                 languageCode = success?.takeIf {
                     it.subtitleOwnerBvid == it.info.bvid && it.subtitleOwnerCid == it.info.cid
                 }?.subtitleSecondaryLanguage,
                 fallbackLabel = "英文"
+            )
+        }
+        val subtitleTrackOptions = remember(uiState) {
+            val success = uiState as? PlayerUiState.Success ?: return@remember emptyList()
+            if (success.subtitleOwnerBvid != success.info.bvid || success.subtitleOwnerCid != success.info.cid) {
+                return@remember emptyList()
+            }
+            buildSubtitleTrackOptions(
+                tracks = success.subtitleTracks,
+                selectedTrackKey = success.subtitlePrimaryTrackKey
             )
         }
 
@@ -4002,6 +4027,7 @@ fun VideoPlayerSection(
                     displayMode = if (subtitleFeatureEnabled) subtitleDisplayMode else SubtitleDisplayMode.OFF,
                     primaryLabel = subtitlePrimaryLabel,
                     secondaryLabel = subtitleSecondaryLabel,
+                    trackOptions = subtitleTrackOptions,
                     largeTextEnabled = subtitleLargeTextByUser
                 ),
                 subtitleControlCallbacks = SubtitleControlCallbacks(
@@ -4026,6 +4052,9 @@ fun VideoPlayerSection(
                             SubtitleDisplayMode.OFF
                         }
                         applySubtitleDisplayModePreferenceChange(nextMode)
+                    },
+                    onTrackSelected = { trackKey ->
+                        onSubtitleTrackSelected(trackKey)
                     },
                     onLargeTextChange = { enabled ->
                         com.android.purebilibili.core.util.Logger.d(
