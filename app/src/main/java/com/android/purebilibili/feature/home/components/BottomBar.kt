@@ -1325,7 +1325,7 @@ internal fun resolveAndroidNativeIdleIndicatorSurfaceColor(
     darkTheme: Boolean
 ): Color {
     return if (darkTheme) {
-        Color.White.copy(alpha = 0.1f)
+        Color.White.copy(alpha = 0.28f)
     } else {
         Color.Black.copy(alpha = 0.1f)
     }
@@ -1335,15 +1335,8 @@ internal fun resolveBottomBarIdleIndicatorSurfaceColor(
     preset: BottomBarLiquidGlassPreset,
     darkTheme: Boolean
 ): Color {
-    return when (preset) {
-        BottomBarLiquidGlassPreset.BILIPAI_TUNED -> resolveAndroidNativeIdleIndicatorSurfaceColor(darkTheme)
-        // iOS26 壳层变厚后，KSU 的 0.1 白色空闲面会被深色视频内容吃掉；这里只恢复胶囊灰白可见度。
-        BottomBarLiquidGlassPreset.IOS26_REFINED -> if (darkTheme) {
-            iOSSystemGray6.copy(alpha = 0.28f)
-        } else {
-            Color.Black.copy(alpha = 0.1f)
-        }
-    }
+    // 两预设统一对齐 KSU：深色淡白 0.1 / 浅色淡黑 0.1
+    return resolveAndroidNativeIdleIndicatorSurfaceColor(darkTheme)
 }
 
 internal fun resolveAndroidNativePanelOffsetFraction(
