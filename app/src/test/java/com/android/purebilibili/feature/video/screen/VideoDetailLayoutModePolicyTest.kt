@@ -68,8 +68,8 @@ class VideoDetailLayoutModePolicyTest {
     }
 
     @Test
-    fun frozenCommentBar_followsLiquidGlassGlobalToggle() {
-        assertFalse(shouldShowFrozenCommentBar(isLiquidGlassEnabled = false))
+    fun frozenCommentBar_remainsVisibleWhenLiquidGlassIsDisabled() {
+        assertTrue(shouldShowFrozenCommentBar())
         assertTrue(shouldShowVideoDetailActionButtons())
     }
 
@@ -871,7 +871,6 @@ class VideoDetailLayoutModePolicyTest {
     }
 
     private fun shouldShowFrozenCommentBar(
-        isLiquidGlassEnabled: Boolean = true,
         useTabletLayout: Boolean = false,
         selectedTabIndex: Int = 1,
         isFullscreenMode: Boolean = false,
@@ -882,7 +881,6 @@ class VideoDetailLayoutModePolicyTest {
         isExternalPlaylistQueueBarVisible: Boolean = false
     ): Boolean {
         return shouldShowVideoDetailBottomInteractionBar(
-            isLiquidGlassEnabled = isLiquidGlassEnabled,
             useTabletLayout = useTabletLayout,
             selectedTabIndex = selectedTabIndex,
             isFullscreenMode = isFullscreenMode,

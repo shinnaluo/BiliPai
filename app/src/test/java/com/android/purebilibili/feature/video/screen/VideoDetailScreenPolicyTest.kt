@@ -126,13 +126,12 @@ class VideoDetailScreenPolicyTest {
     }
 
     @Test
-    fun frozenCommentBar_usesExistingLiquidGlassGlobalToggle() {
+    fun frozenCommentBar_doesNotDependOnLiquidGlassToggle() {
         val source = File("src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
             .readText()
 
-        assertTrue(source.contains("SettingsManager.getHomeSettings(context)"))
-        assertTrue(source.contains("val videoDetailLiquidGlassEnabled = homeSettings.isLiquidGlassEnabled"))
-        assertTrue(source.contains("isLiquidGlassEnabled = videoDetailLiquidGlassEnabled"))
+        assertFalse(source.contains("val videoDetailLiquidGlassEnabled"))
+        assertFalse(source.contains("isLiquidGlassEnabled = videoDetailLiquidGlassEnabled"))
         assertTrue(source.contains("val showFrozenCommentBar = shouldShowVideoDetailBottomInteractionBar("))
     }
 

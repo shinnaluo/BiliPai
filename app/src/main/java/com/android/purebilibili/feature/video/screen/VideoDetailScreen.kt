@@ -98,9 +98,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.purebilibili.core.ui.blur.rememberRecoverableHazeState
-import com.android.purebilibili.core.store.HomeSettings
 import com.android.purebilibili.core.store.PortraitPlayerCollapseMode
-import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.core.theme.LocalUiPreset
 //  已改用 MaterialTheme.colorScheme.primary
 
@@ -1114,12 +1112,6 @@ fun VideoDetailScreen(
     val view = LocalView.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val configuration = LocalConfiguration.current
-    val homeSettings by SettingsManager.getHomeSettings(context)
-        .collectAsStateWithLifecycle(
-            initialValue = HomeSettings(),
-            lifecycle = lifecycleOwner.lifecycle
-        )
-    val videoDetailLiquidGlassEnabled = homeSettings.isLiquidGlassEnabled
     val homeUpBadgesVisible by com.android.purebilibili.core.store.SettingsManager
         .getHomeUpBadgesVisible(context)
         .collectAsStateWithLifecycle(initialValue = true
@@ -3629,7 +3621,6 @@ fun VideoDetailScreen(
                                                             selectedTabIndex = selectedVideoContentTabIndex
                                                         )
                                                     val showFrozenCommentBar = shouldShowVideoDetailBottomInteractionBar(
-                                                        isLiquidGlassEnabled = videoDetailLiquidGlassEnabled,
                                                         useTabletLayout = useTabletLayout,
                                                         selectedTabIndex = selectedVideoContentTabIndex,
                                                         isFullscreenMode = isFullscreenMode,
@@ -5957,7 +5948,6 @@ internal fun shouldEnablePortraitExperience(): Boolean {
 }
 
 internal fun shouldShowVideoDetailBottomInteractionBar(
-    isLiquidGlassEnabled: Boolean,
     useTabletLayout: Boolean,
     selectedTabIndex: Int,
     isFullscreenMode: Boolean,
@@ -5967,8 +5957,7 @@ internal fun shouldShowVideoDetailBottomInteractionBar(
     isFavoriteFolderDialogVisible: Boolean,
     isExternalPlaylistQueueBarVisible: Boolean
 ): Boolean {
-    return isLiquidGlassEnabled &&
-        !useTabletLayout &&
+    return !useTabletLayout &&
         selectedTabIndex == VIDEO_CONTENT_COMMENT_TAB_INDEX &&
         !isFullscreenMode &&
         !isPortraitFullscreen &&
