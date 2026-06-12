@@ -10,17 +10,16 @@ import com.android.purebilibili.core.store.AccountSessionStore
 import com.android.purebilibili.core.store.StoredAccountSession
 import com.android.purebilibili.core.store.TokenManager
 import com.android.purebilibili.data.model.response.FavFolder
-import com.android.purebilibili.data.model.response.MemberAccountData
+import com.android.purebilibili.data.model.response.NavData
 import com.android.purebilibili.data.model.response.SpaceUserInfo
-import com.android.purebilibili.data.model.response.SpaceAggregateData
-import com.android.purebilibili.data.model.response.SpaceDynamicItem
 import com.android.purebilibili.data.model.response.WbiImg
 import com.android.purebilibili.data.repository.FavoriteRepository
 import com.android.purebilibili.data.repository.BangumiRepository
 import com.android.purebilibili.feature.dynamic.DynamicDeleteAction
 import com.android.purebilibili.feature.bangumi.MY_FOLLOW_TYPE_BANGUMI
 import com.android.purebilibili.feature.home.UserState
-import kotlinx.coroutines.async
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -35,7 +34,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -60,8 +59,8 @@ internal fun shouldStartProfileLoad(
     isLoadInFlight: Boolean,
     force: Boolean
 ): Boolean {
-    if (isLoadInFlight) return false
-    return force || !hasLoadedOnce
+    if (force) return true
+    return !hasLoadedOnce && !isLoadInFlight
 }
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
@@ -73,6 +72,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     val activeAccountMid = _activeAccountMid.asStateFlow()
     private var hasLoadedProfileOnce = false
     private var isProfileLoadInFlight = false
+    private var profileLoadGeneration = 0L
 
     init {
         refreshSavedAccounts()
@@ -95,202 +95,286 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         }
         hasLoadedProfileOnce = true
         isProfileLoadInFlight = true
+        val generation = ++profileLoadGeneration
+        val requestedMid = TokenManager.midCache
+        val current = _uiState.value as? ProfileUiState.Success
+        _uiState.value = if (current != null && current.user.mid == requestedMid) {
+            current.copy(space = current.space.copy(isLoading = true, message = null))
+        } else {
+            ProfileUiState.Loading
+        }
         viewModelScope.launch {
-            var customBgUri = ""
-            try {
-                // 0. [New] 始终并行读取本地自定义背景设置 (即使未登录也需要背景)
-                // 使用 first() 获取当前值
-                customBgUri = try {
-                    SettingsManager.getProfileBgUri(getApplication()).first() ?: ""
-                } catch (e: Exception) { "" }
+            performProfileLoad(generation = generation, requestedMid = requestedMid)
+        }
+    }
 
-                // 1. 检查本地是否有 Token
-                if (TokenManager.sessDataCache.isNullOrEmpty()) {
-                    // [Fix] Add timestamp for LoggedOut state too
-                    val finalUri = if (customBgUri.startsWith("file://")) {
-                        try {
-                            val file = File(Uri.parse(customBgUri).path ?: "")
-                            if (file.exists()) "$customBgUri?t=${file.lastModified()}" else customBgUri
-                        } catch (e: Exception) { customBgUri }
-                    } else customBgUri
-                    
-                    _uiState.value = ProfileUiState.LoggedOut(topPhoto = finalUri)
-                    return@launch
-                }
-
-                _uiState.value = ProfileUiState.Loading
-
-                // 2. 使用 supervisorScope 进行并行请求，确保一个失败不会取消整个 scope
-                // 这样可以在 await() 时捕获异常
-                val (navResult, statResult) = kotlinx.coroutines.supervisorScope {
-                    val navDeferred = async { runCatching { NetworkModule.api.getNavInfo() } }
-                    val statDeferred = async { runCatching { NetworkModule.api.getNavStat() } }
-                    Pair(navDeferred.await(), statDeferred.await())
-                }
-
-                // 检查网络请求结果
-                val navResp = navResult.getOrElse { e ->
-                    // 网络失败
-                    if (isNetworkError(e as Exception)) {
-                        _uiState.value = ProfileUiState.Error("网络不可用，请检查网络连接")
-                    } else {
-                        _uiState.value = ProfileUiState.Error("加载失败，点击重试")
-                    }
-                    return@launch
-                }
-                
-                val statResp = statResult.getOrNull() // 统计信息失败不影响主流程
-
-                val data = navResp.data
-                val statData = statResp?.data
-
-                // 3. 判断是否登录有效
-                if (data != null && data.isLogin) {
-                    // 优先使用本地自定义背景，否则使用 API 返回的 top_photo
-                    val finalTopPhoto = if (customBgUri.isNotEmpty()) {
-                         // [Fix] Add timestamp to bust Coil cache for local files
-                        if (customBgUri.startsWith("file://")) {
-                            try {
-                                val uri = Uri.parse(customBgUri)
-                                val file = File(uri.path ?: "")
-                                if (file.exists()) {
-                                    "$customBgUri?t=${file.lastModified()}"
-                                } else customBgUri
-                            } catch (e: Exception) {
-                                customBgUri
-                            }
-                        } else {
-                            customBgUri
-                        }
-                    } else {
-                        data.top_photo
-                    }
-                    
-                    val userState = UserState(
-                        isLogin = true,
-                        face = data.face,
-                        name = data.uname,
-                        mid = data.mid,
-                        level = data.level_info.current_level,
-                        coin = data.money,
-                        bcoin = data.wallet.bcoin_balance,
-                        isVip = data.vip.status == 1,
-                        vipLabel = data.vip.label.text,
-                        // 绑定统计数据
-                        following = statData?.following ?: 0,
-                        follower = statData?.follower ?: 0,
-                        dynamic = statData?.dynamic_count ?: 0,
-                        // 绑定背景图
-                        topPhoto = finalTopPhoto
+    private suspend fun performProfileLoad(generation: Long, requestedMid: Long?) {
+        var customBgUri = ""
+        try {
+            customBgUri = readProfileBackgroundUri()
+            if (TokenManager.sessDataCache.isNullOrEmpty()) {
+                if (generation == profileLoadGeneration) {
+                    _uiState.value = ProfileUiState.LoggedOut(
+                        topPhoto = resolveProfileTopPhoto(customBgUri, "")
                     )
-                    val profileData = loadProfileSpaceData(data.mid, data.wbi_img)
-                    val spaceState = resolveProfileSpaceStateFromAggregate(
-                        aggregate = profileData.aggregate,
-                        favoriteFoldersFallback = profileData.favoriteFolders,
-                        bangumiItems = profileData.bangumiItems,
-                        dynamicItems = profileData.dynamicItems
-                    ).let { state ->
-                        state.copy(favoriteFolders = resolveFavoriteFoldersWithPreviewCovers(state.favoriteFolders))
-                    }
-                    val editableAccount = resolveProfileEditableAccountState(
-                        account = profileData.account,
-                        user = userState,
-                        aggregateSign = profileData.spaceInfo?.sign ?: profileData.aggregate?.card?.sign.orEmpty(),
-                        ipLocation = profileData.spaceInfo?.ipLocation
-                    )
-                    _uiState.value = ProfileUiState.Success(
-                        user = userState,
-                        favoriteFolders = profileData.favoriteFolders,
-                        space = spaceState,
-                        editableAccount = editableAccount
-                    )
-                    TokenManager.saveMid(getApplication(), data.mid)
-                    TokenManager.saveVipStatus(data.vip.status == 1)
-                    AccountSessionStore.upsertCurrentAccount(getApplication(), data)
-                    refreshSavedAccounts()
-                } else {
-                    // Cookie 过期或无效
-                    TokenManager.clear(getApplication())
-                    AccountSessionStore.clearActiveAccount(getApplication())
-                    refreshSavedAccounts()
-                    _uiState.value = ProfileUiState.LoggedOut(topPhoto = customBgUri)
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                // 🔧 [修复] 网络错误时不清除 Token，保持登录状态
-                // 区分「无网络」和「真正的服务器错误」
-                val hasToken = !TokenManager.sessDataCache.isNullOrEmpty()
-                if (hasToken && isNetworkError(e)) {
-                    // 有 Token 但网络不可用 → 显示离线提示，不退出登录
-                    _uiState.value = ProfileUiState.Error("网络不可用，请检查网络连接")
-                } else if (hasToken) {
-                    // 有 Token 但其他错误 → 也显示错误，不清除登录
-                    _uiState.value = ProfileUiState.Error("加载失败，点击重试")
-                } else {
-                    // 无 Token → 显示未登录
-                    // [Fix] Add timestamp for LoggedOut state
-                    val finalUri = if (customBgUri.startsWith("file://")) {
-                        try {
-                            val file = File(Uri.parse(customBgUri).path ?: "")
-                            if (file.exists()) "$customBgUri?t=${file.lastModified()}" else customBgUri
-                        } catch (e: Exception) { customBgUri }
-                    } else customBgUri
-                    _uiState.value = ProfileUiState.LoggedOut(topPhoto = finalUri) 
-                }
-            } finally {
+                return
+            }
+            val data = NetworkModule.api.getNavInfo().data
+            if (generation != profileLoadGeneration) return
+            if (data == null || !data.isLogin) {
+                clearInvalidProfileSession(generation, customBgUri)
+                return
+            }
+            showProfileIdentity(generation, data, customBgUri)
+            profileRequestOrNull { persistProfileSession(data) }
+            loadProfileEnrichment(generation, data.mid, data.wbi_img)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            handleProfileLoadFailure(generation, requestedMid, customBgUri, e)
+        } finally {
+            if (generation == profileLoadGeneration) {
                 isProfileLoadInFlight = false
             }
         }
     }
 
-    private fun refreshFavoriteFolders(mid: Long) {
-        if (mid <= 0L) return
-        viewModelScope.launch {
-            val folders = FavoriteRepository.getFavFolders(mid).getOrElse { emptyList() }
-            val current = _uiState.value as? ProfileUiState.Success ?: return@launch
-            if (current.user.mid == mid) {
-                _uiState.value = current.copy(favoriteFolders = folders)
+    private fun showProfileIdentity(
+        generation: Long,
+        data: NavData,
+        customBgUri: String
+    ) {
+        if (generation != profileLoadGeneration) return
+        val cached = (_uiState.value as? ProfileUiState.Success)
+            ?.takeIf { it.user.mid == data.mid }
+        val user = UserState(
+            isLogin = true,
+            face = data.face,
+            name = data.uname,
+            mid = data.mid,
+            level = data.level_info.current_level,
+            coin = data.money,
+            bcoin = data.wallet.bcoin_balance,
+            following = cached?.user?.following ?: 0,
+            follower = cached?.user?.follower ?: 0,
+            dynamic = cached?.user?.dynamic ?: 0,
+            isVip = data.vip.status == 1,
+            vipLabel = data.vip.label.text,
+            topPhoto = resolveProfileTopPhoto(customBgUri, data.top_photo)
+        )
+        _uiState.value = ProfileUiState.Success(
+            user = user,
+            favoriteFolders = cached?.favoriteFolders.orEmpty(),
+            space = cached?.space?.copy(isLoading = true, message = null)
+                ?: ProfileSpaceUiState(isLoading = true),
+            editableAccount = cached?.editableAccount
+                ?: resolveProfileEditableAccountState(account = null, user = user)
+        )
+    }
+
+    private suspend fun persistProfileSession(data: NavData) {
+        TokenManager.saveMid(getApplication(), data.mid)
+        TokenManager.saveVipStatus(data.vip.status == 1)
+        AccountSessionStore.upsertCurrentAccount(getApplication(), data)
+        refreshSavedAccounts()
+    }
+
+    private suspend fun loadProfileEnrichment(
+        generation: Long,
+        mid: Long,
+        wbiImg: WbiImg?
+    ) {
+        try {
+            supervisorScope {
+                listOf(
+                    launch { loadProfileStats(generation, mid) },
+                    launch { loadProfileAccount(generation, mid) },
+                    launch { loadProfileSpaceInfo(generation, mid, wbiImg) },
+                    launch { loadProfileAggregate(generation, mid) },
+                    launch { loadProfileFavoriteFolders(generation, mid) },
+                    launch { loadProfileBangumi(generation, mid) },
+                    launch { loadProfileDynamics(generation, mid) }
+                ).joinAll()
+            }
+        } finally {
+            updateProfileSuccess(generation, mid) { current ->
+                current.copy(space = current.space.copy(isLoading = false))
             }
         }
     }
 
-    private data class ProfileSpaceLoadData(
-        val account: MemberAccountData?,
-        val spaceInfo: SpaceUserInfo?,
-        val aggregate: SpaceAggregateData?,
-        val favoriteFolders: List<FavFolder>,
-        val bangumiItems: List<com.android.purebilibili.data.model.response.FollowBangumiItem>,
-        val dynamicItems: List<SpaceDynamicItem>
-    )
-
-    private suspend fun loadProfileSpaceData(mid: Long, wbiImg: WbiImg?): ProfileSpaceLoadData {
-        return kotlinx.coroutines.supervisorScope {
-            val accountDeferred = async { runCatching { NetworkModule.api.getMemberAccount().data } }
-            val spaceInfoDeferred = async { runCatching { fetchProfileSpaceInfo(mid, wbiImg) } }
-            val aggregateDeferred = async { runCatching { NetworkModule.spaceApi.getSpaceAggregate(mid).data } }
-            val favoriteDeferred = async { FavoriteRepository.getFavFolders(mid).getOrElse { emptyList() } }
-            val bangumiDeferred = async {
-                BangumiRepository.getMyFollowBangumi(
-                    type = MY_FOLLOW_TYPE_BANGUMI,
-                    page = 1,
-                    pageSize = 12,
-                    vmid = mid
-                ).getOrNull()?.list.orEmpty()
-            }
-            val dynamicDeferred = async {
-                runCatching { NetworkModule.spaceApi.getSpaceDynamic(mid).data?.items.orEmpty() }
-                    .getOrElse { emptyList() }
-            }
-
-            ProfileSpaceLoadData(
-                account = accountDeferred.await().getOrNull(),
-                spaceInfo = spaceInfoDeferred.await().getOrNull(),
-                aggregate = aggregateDeferred.await().getOrNull(),
-                favoriteFolders = favoriteDeferred.await(),
-                bangumiItems = bangumiDeferred.await(),
-                dynamicItems = dynamicDeferred.await()
+    private suspend fun loadProfileStats(generation: Long, mid: Long) {
+        val stats = profileRequestOrNull { NetworkModule.api.getNavStat().data } ?: return
+        updateProfileSuccess(generation, mid) { current ->
+            current.copy(
+                user = current.user.copy(
+                    following = stats.following,
+                    follower = stats.follower,
+                    dynamic = stats.dynamic_count
+                )
             )
         }
+    }
+
+    private suspend fun loadProfileAccount(generation: Long, mid: Long) {
+        val account = profileRequestOrNull { NetworkModule.api.getMemberAccount().data } ?: return
+        updateProfileSuccess(generation, mid) { current ->
+            current.copy(
+                editableAccount = current.editableAccount.copy(
+                    name = account.uname.ifBlank { current.user.name },
+                    birthday = account.birthday,
+                    sex = account.sex,
+                    sign = account.sign.ifBlank { current.editableAccount.sign }
+                )
+            )
+        }
+    }
+
+    private suspend fun loadProfileSpaceInfo(
+        generation: Long,
+        mid: Long,
+        wbiImg: WbiImg?
+    ) {
+        val info = profileRequestOrNull { fetchProfileSpaceInfo(mid, wbiImg) } ?: return
+        updateProfileSuccess(generation, mid) { current ->
+            current.copy(
+                editableAccount = current.editableAccount.copy(
+                    sign = current.editableAccount.sign.ifBlank { info.sign },
+                    ipLocation = info.ipLocation.orEmpty()
+                )
+            )
+        }
+    }
+
+    private suspend fun loadProfileAggregate(generation: Long, mid: Long) {
+        val aggregate = profileRequestOrNull {
+            NetworkModule.spaceApi.getSpaceAggregate(mid).data
+        } ?: return
+        updateProfileSuccess(generation, mid) { current ->
+            val nextSpace = mergeProfileAggregateState(current.space, aggregate)
+            current.copy(
+                favoriteFolders = nextSpace.favoriteFolders,
+                space = nextSpace,
+                editableAccount = current.editableAccount.copy(
+                    sign = current.editableAccount.sign.ifBlank {
+                        aggregate.card?.sign.orEmpty()
+                    }
+                )
+            )
+        }
+    }
+
+    private suspend fun loadProfileFavoriteFolders(generation: Long, mid: Long) {
+        val folders = FavoriteRepository.getFavFolders(mid).getOrNull() ?: return
+        updateProfileSuccess(generation, mid) { current ->
+            val nextSpace = mergeProfileFavoriteFolderState(current.space, folders)
+            current.copy(
+                favoriteFolders = nextSpace.favoriteFolders,
+                space = nextSpace
+            )
+        }
+    }
+
+    private suspend fun loadProfileBangumi(generation: Long, mid: Long) {
+        val items = BangumiRepository.getMyFollowBangumi(
+            type = MY_FOLLOW_TYPE_BANGUMI,
+            page = 1,
+            pageSize = 12,
+            vmid = mid
+        ).getOrNull()?.list ?: return
+        updateProfileSuccess(generation, mid) { current ->
+            current.copy(space = mergeProfileBangumiState(current.space, items))
+        }
+    }
+
+    private suspend fun loadProfileDynamics(generation: Long, mid: Long) {
+        val items = profileRequestOrNull {
+            NetworkModule.spaceApi.getSpaceDynamic(mid).data?.items
+        } ?: return
+        updateProfileSuccess(generation, mid) { current ->
+            current.copy(space = mergeProfileDynamicState(current.space, items))
+        }
+    }
+
+    private fun updateProfileSuccess(
+        generation: Long,
+        mid: Long,
+        transform: (ProfileUiState.Success) -> ProfileUiState.Success
+    ) {
+        val current = _uiState.value as? ProfileUiState.Success ?: return
+        if (!shouldApplyProfileLoadResult(generation, profileLoadGeneration, mid, current.user.mid)) {
+            return
+        }
+        _uiState.value = transform(current)
+    }
+
+    private suspend fun clearInvalidProfileSession(generation: Long, customBgUri: String) {
+        if (generation != profileLoadGeneration) return
+        TokenManager.clear(getApplication())
+        AccountSessionStore.clearActiveAccount(getApplication())
+        refreshSavedAccounts()
+        _uiState.value = ProfileUiState.LoggedOut(topPhoto = resolveProfileTopPhoto(customBgUri, ""))
+    }
+
+    private fun handleProfileLoadFailure(
+        generation: Long,
+        requestedMid: Long?,
+        customBgUri: String,
+        error: Exception
+    ) {
+        if (generation != profileLoadGeneration) return
+        val cached = (_uiState.value as? ProfileUiState.Success)
+            ?.takeIf { it.user.mid == requestedMid }
+        if (cached != null) {
+            _uiState.value = cached.copy(
+                space = cached.space.copy(
+                    isLoading = false,
+                    message = if (isNetworkError(error)) {
+                        "网络不可用，请检查网络连接"
+                    } else {
+                        "刷新失败，请稍后重试"
+                    }
+                )
+            )
+            return
+        }
+        _uiState.value = if (TokenManager.sessDataCache.isNullOrEmpty()) {
+            ProfileUiState.LoggedOut(topPhoto = resolveProfileTopPhoto(customBgUri, ""))
+        } else {
+            ProfileUiState.Error(
+                if (isNetworkError(error)) "网络不可用，请检查网络连接" else "加载失败，点击重试"
+            )
+        }
+    }
+
+    private suspend fun readProfileBackgroundUri(): String {
+        return try {
+            SettingsManager.getProfileBgUri(getApplication()).first().orEmpty()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    private suspend fun <T> profileRequestOrNull(request: suspend () -> T): T? {
+        return try {
+            request()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun resolveProfileTopPhoto(customBgUri: String, fallback: String): String {
+        if (customBgUri.isBlank()) return fallback
+        if (!customBgUri.startsWith("file://")) return customBgUri
+        return runCatching {
+            val file = File(Uri.parse(customBgUri).path.orEmpty())
+            if (file.exists()) "$customBgUri?t=${file.lastModified()}" else customBgUri
+        }.getOrDefault(customBgUri)
     }
 
     private suspend fun fetchProfileSpaceInfo(mid: Long, wbiImg: WbiImg?): SpaceUserInfo? {
@@ -302,25 +386,6 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         val params = WbiUtils.sign(mapOf("mid" to mid.toString()), imgKey, subKey)
         val response = NetworkModule.spaceApi.getSpaceInfo(params)
         return if (response.code == 0) response.data else null
-    }
-
-    private suspend fun resolveFavoriteFoldersWithPreviewCovers(folders: List<FavFolder>): List<FavFolder> {
-        if (folders.isEmpty()) return folders
-        return kotlinx.coroutines.supervisorScope {
-            folders.map { folder ->
-                async {
-                    if (folder.cover.isNotBlank() || folder.id <= 0L) {
-                        folder
-                    } else {
-                        val previewCover = FavoriteRepository.getFavoriteList(mediaId = folder.id, pn = 1)
-                            .getOrNull()
-                            ?.let { data -> data.info?.cover?.ifBlank { null } ?: data.medias?.firstOrNull()?.cover }
-                            .orEmpty()
-                        if (previewCover.isBlank()) folder else folder.copy(cover = previewCover)
-                    }
-                }
-            }.awaitAll()
-        }
     }
 
     fun selectProfileSpaceTab(tab: ProfileSpaceMainTab) {
@@ -485,6 +550,8 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
 
     fun logout() {
         viewModelScope.launch {
+            profileLoadGeneration += 1L
+            isProfileLoadInFlight = false
             // retain background
             val customBgUri = SettingsManager.getProfileBgUri(getApplication()).first() ?: ""
             AccountSessionStore.upsertCurrentAccount(getApplication())

@@ -160,6 +160,95 @@ fun resolveProfileSpaceStateFromAggregate(
     )
 }
 
+internal fun mergeProfileAggregateState(
+    current: ProfileSpaceUiState,
+    aggregate: SpaceAggregateData
+): ProfileSpaceUiState {
+    val aggregateFavoriteFolders = aggregate.favourite2?.item.orEmpty()
+        .map(::mapProfileAggregateFavoriteFolder)
+    val contributionVideos = aggregate.archive?.item.orEmpty().map(::mapProfileAggregateVideoItem)
+    return current.copy(
+        favoriteFolders = if (aggregate.favourite2 != null) {
+            mergeProfileFavoriteFolders(current.favoriteFolders, aggregateFavoriteFolders)
+        } else {
+            current.favoriteFolders
+        },
+        favoriteFolderCount = aggregate.favourite2?.count ?: current.favoriteFolderCount,
+        contributionVideos = if (aggregate.archive != null) {
+            contributionVideos
+        } else {
+            current.contributionVideos
+        },
+        contributionVideoCount = aggregate.archive?.count ?: current.contributionVideoCount,
+        coinVideos = aggregate.coinArchive?.item ?: current.coinVideos,
+        coinVideoCount = aggregate.coinArchive?.count ?: current.coinVideoCount,
+        likeVideos = aggregate.likeArchive?.item ?: current.likeVideos,
+        likeVideoCount = aggregate.likeArchive?.count ?: current.likeVideoCount
+    )
+}
+
+internal fun mergeProfileFavoriteFolderState(
+    current: ProfileSpaceUiState,
+    folders: List<FavFolder>
+): ProfileSpaceUiState {
+    val merged = mergeProfileFavoriteFolders(current.favoriteFolders, folders)
+    return current.copy(
+        favoriteFolders = merged,
+        favoriteFolderCount = maxOf(current.favoriteFolderCount, folders.size)
+    )
+}
+
+internal fun mergeProfileBangumiState(
+    current: ProfileSpaceUiState,
+    items: List<FollowBangumiItem>
+): ProfileSpaceUiState {
+    return current.copy(
+        bangumiItems = items,
+        bangumiCount = items.size
+    )
+}
+
+internal fun mergeProfileDynamicState(
+    current: ProfileSpaceUiState,
+    items: List<SpaceDynamicItem>
+): ProfileSpaceUiState {
+    return current.copy(dynamicItems = items.filter { it.visible })
+}
+
+internal fun shouldApplyProfileLoadResult(
+    requestGeneration: Long,
+    currentGeneration: Long,
+    requestedMid: Long,
+    currentMid: Long?
+): Boolean {
+    return requestGeneration == currentGeneration && requestedMid == currentMid
+}
+
+private fun mergeProfileFavoriteFolders(
+    current: List<FavFolder>,
+    incoming: List<FavFolder>
+): List<FavFolder> {
+    if (current.isEmpty()) return incoming
+    if (incoming.isEmpty()) return current
+
+    val mergedById = current.associateByTo(LinkedHashMap()) { it.id }
+    incoming.forEach { folder ->
+        val existing = mergedById[folder.id]
+        mergedById[folder.id] = if (existing == null) {
+            folder
+        } else {
+            folder.copy(
+                fid = folder.fid.takeIf { it > 0L } ?: existing.fid,
+                mid = folder.mid.takeIf { it > 0L } ?: existing.mid,
+                title = folder.title.ifBlank { existing.title },
+                cover = folder.cover.ifBlank { existing.cover },
+                media_count = maxOf(folder.media_count, existing.media_count)
+            )
+        }
+    }
+    return mergedById.values.toList()
+}
+
 private fun mapProfileAggregateVideoItem(item: SpaceAggregateArchiveItem): SpaceVideoItem {
     return SpaceVideoItem(
         aid = item.aid,

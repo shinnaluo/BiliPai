@@ -40,7 +40,7 @@ class ProfileLoadPolicyTest {
     }
 
     @Test
-    fun inFlightLoad_rejectsDuplicateForceOrAutomaticRequests() {
+    fun inFlightLoad_rejectsAutomaticButAllowsForceToInvalidateOldLoad() {
         assertFalse(
             shouldStartProfileLoad(
                 hasLoadedOnce = false,
@@ -48,7 +48,7 @@ class ProfileLoadPolicyTest {
                 force = false
             )
         )
-        assertFalse(
+        assertTrue(
             shouldStartProfileLoad(
                 hasLoadedOnce = true,
                 isLoadInFlight = true,

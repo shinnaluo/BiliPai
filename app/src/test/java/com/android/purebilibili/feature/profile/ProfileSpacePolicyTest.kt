@@ -151,6 +151,80 @@ class ProfileSpacePolicyTest {
     }
 
     @Test
+    fun `aggregate merge preserves already loaded bangumi and dynamic content`() {
+        val bangumi = FollowBangumiItem(seasonId = 2, title = "追番")
+        val dynamic = SpaceDynamicItem(id_str = "dynamic-1")
+        val current = ProfileSpaceUiState(
+            bangumiItems = listOf(bangumi),
+            bangumiCount = 1,
+            dynamicItems = listOf(dynamic),
+            isLoading = true
+        )
+
+        val merged = mergeProfileAggregateState(
+            current = current,
+            aggregate = SpaceAggregateData(
+                archive = com.android.purebilibili.data.model.response.SpaceAggregateArchive(
+                    count = 1,
+                    item = listOf(SpaceAggregateArchiveItem(aid = 3, title = "投稿"))
+                )
+            )
+        )
+
+        assertEquals(listOf(bangumi), merged.bangumiItems)
+        assertEquals(listOf(dynamic), merged.dynamicItems)
+        assertEquals(1, merged.contributionVideoCount)
+        assertTrue(merged.isLoading)
+    }
+
+    @Test
+    fun `favorite merge keeps aggregate cover without requesting folder content`() {
+        val current = ProfileSpaceUiState(
+            favoriteFolders = listOf(
+                FavFolder(
+                    id = 10,
+                    title = "默认收藏夹",
+                    cover = "https://i0.hdslb.com/folder.jpg",
+                    media_count = 3
+                )
+            ),
+            favoriteFolderCount = 1
+        )
+
+        val merged = mergeProfileFavoriteFolderState(
+            current = current,
+            folders = listOf(
+                FavFolder(id = 10, title = "默认收藏夹", cover = "", media_count = 3),
+                FavFolder(id = 11, title = "音乐", cover = "", media_count = 1)
+            )
+        )
+
+        assertEquals(2, merged.favoriteFolders.size)
+        assertEquals("https://i0.hdslb.com/folder.jpg", merged.favoriteFolders.first().cover)
+        assertEquals("", merged.favoriteFolders.last().cover)
+    }
+
+    @Test
+    fun `profile load generation rejects response from previous account`() {
+        assertFalse(
+            shouldApplyProfileLoadResult(
+                requestGeneration = 2L,
+                currentGeneration = 3L,
+                requestedMid = 10L,
+                currentMid = 20L
+            )
+        )
+        assertTrue(
+            shouldApplyProfileLoadResult(
+                requestGeneration = 3L,
+                currentGeneration = 3L,
+                requestedMid = 20L,
+                currentMid = 20L
+            )
+        )
+    }
+
+    @Test
     fun `dynamic cover falls back to draw image when archive is absent`() {
         val item = SpaceDynamicItem(
             modules = SpaceDynamicModules(
