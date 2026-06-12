@@ -11,6 +11,9 @@ class FavoriteSubscribedFolderSharedTransitionStructureTest {
         val source = loadSource()
 
         assertTrue(source.contains("FavoriteSubscribedFolderRow("))
+        assertTrue(source.contains("FavoriteSubscribedFolderPreview("))
+        assertTrue(source.contains("model = FormatUtils.fixImageUrl(coverUrl)"))
+        assertTrue(source.contains(".aspectRatio(16f / 9f)"))
         assertTrue(source.contains(".favoriteCollectionSharedBounds("))
         assertTrue(source.contains("namespace = \"favorite_collection\""))
         assertTrue(source.contains("modifier = Modifier.favoriteCollectionSharedBounds("))
@@ -24,6 +27,20 @@ class FavoriteSubscribedFolderSharedTransitionStructureTest {
         assertTrue(source.contains("sharedElementTransition = route.sharedElementTransition"))
         assertTrue(source.contains("sharedElementTransition = seasonSeriesKey.sharedElementTransition"))
         assertTrue(source.contains("favoriteCollectionSharedElementRoute = FavoriteCollectionRoute("))
+    }
+
+    @Test
+    fun seasonDetailVideoCardsKeepVideoSharedElementSource() {
+        val commonListSource = loadSource()
+        val navigationSource = loadNavigationSource()
+
+        assertTrue(commonListSource.contains("transitionEnabled = cardTransitionEnabled"))
+        assertTrue(
+            navigationSource.contains(
+                "LocalVideoCardSharedElementSourceRoute provides seasonSeriesKey.toLegacyRoute()"
+            )
+        )
+        assertTrue(navigationSource.contains("sourceRoute = seasonSeriesKey.toLegacyRoute()"))
     }
 
     private fun loadSource(): String {

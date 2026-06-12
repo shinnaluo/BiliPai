@@ -127,6 +127,31 @@ class FavoriteFolderAggregationPolicyTest {
     }
 
     @Test
+    fun `subscribed favorite preview uses normalized list cover`() {
+        assertEquals(
+            "https://i0.hdslb.com/bfs/archive/latest.jpg",
+            resolveSubscribedFavoritePreviewCover(
+                FavFolder(
+                    cover = " https://i0.hdslb.com/bfs/archive/latest.jpg ",
+                    source = FavFolderSource.SUBSCRIBED
+                )
+            )
+        )
+        assertEquals(
+            null,
+            resolveSubscribedFavoritePreviewCover(
+                FavFolder(cover = " ", source = FavFolderSource.SUBSCRIBED)
+            )
+        )
+        assertEquals(
+            null,
+            resolveSubscribedFavoritePreviewCover(
+                FavFolder(cover = "https://example.com/owned.jpg", source = FavFolderSource.OWNED)
+            )
+        )
+    }
+
+    @Test
     fun `resolveFavoriteCollectionRoute carries collection owner name`() {
         val route = resolveFavoriteCollectionRoute(
             VideoItem(

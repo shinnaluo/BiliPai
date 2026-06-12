@@ -92,6 +92,7 @@ import com.android.purebilibili.core.ui.LocalSharedTransitionScope
 import com.android.purebilibili.core.ui.LocalSharedTransitionEnabled
 import com.android.purebilibili.core.ui.rememberAppBackIcon
 import com.android.purebilibili.core.ui.transition.BiliPaiSharedElementKey
+import com.android.purebilibili.core.util.FormatUtils
 import com.android.purebilibili.core.util.VideoGridItemSkeleton
 import com.android.purebilibili.core.util.CardPositionManager
 import com.android.purebilibili.feature.home.components.cards.ElegantVideoCard
@@ -1712,6 +1713,9 @@ private fun FavoriteSubscribedFolderRow(
     val sharedElementRoute = remember(folder) {
         resolveSubscribedFavoriteCollectionRoute(folder)
     }
+    val previewCover = remember(folder.cover, folder.source) {
+        resolveSubscribedFavoritePreviewCover(folder)
+    }
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -1726,13 +1730,12 @@ private fun FavoriteSubscribedFolderRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = CupertinoIcons.Default.Folder,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
+            FavoriteSubscribedFolderPreview(
+                coverUrl = previewCover,
+                title = folder.title
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -1753,6 +1756,37 @@ private fun FavoriteSubscribedFolderRow(
             AssistChip(
                 onClick = onClick,
                 label = { Text("订阅") }
+            )
+        }
+    }
+}
+
+@Composable
+private fun FavoriteSubscribedFolderPreview(
+    coverUrl: String?,
+    title: String
+) {
+    val shape = RoundedCornerShape(10.dp)
+    Box(
+        modifier = Modifier
+            .width(112.dp)
+            .aspectRatio(16f / 9f)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+        contentAlignment = Alignment.Center
+    ) {
+        if (coverUrl != null) {
+            AsyncImage(
+                model = FormatUtils.fixImageUrl(coverUrl),
+                contentDescription = "$title 最新视频封面",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Icon(
+                imageVector = CupertinoIcons.Default.Folder,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
             )
         }
     }

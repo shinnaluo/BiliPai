@@ -27,6 +27,11 @@ internal fun resolveFavoriteCollectionSharedElementId(
     return "$normalizedType:$id"
 }
 
+internal fun resolveSubscribedFavoritePreviewCover(folder: FavFolder): String? {
+    if (folder.source != FavFolderSource.SUBSCRIBED) return null
+    return folder.cover.trim().takeIf { it.isNotEmpty() }
+}
+
 internal fun mergeFavoriteFoldersForDisplay(
     ownedFolders: List<FavFolder>,
     subscribedFolders: List<FavFolder>
