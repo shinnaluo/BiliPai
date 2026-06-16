@@ -21,8 +21,8 @@ class VideoPlayerStateReusePolicyTest {
     }
 
     @Test
-    fun `does not reuse when route cid not provided even if bvid matches`() {
-        assertFalse(
+    fun `reuses mini player when route cid is missing but bvid matches active player`() {
+        assertTrue(
             shouldReuseMiniPlayerAtEntry(
                 isMiniPlayerActive = true,
                 miniPlayerBvid = "BV1same",
@@ -47,8 +47,8 @@ class VideoPlayerStateReusePolicyTest {
     }
 
     @Test
-    fun `does not restore cached state when request cid is unknown`() {
-        assertFalse(
+    fun `restores cached state when request cid is unknown but bvid matches`() {
+        assertTrue(
             shouldRestoreCachedUiState(
                 cachedBvid = "BV1same",
                 cachedCid = 1001L,

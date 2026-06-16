@@ -104,7 +104,7 @@ internal fun shouldReuseMiniPlayerAtEntry(
 ): Boolean {
     if (!isMiniPlayerActive || !hasMiniPlayerInstance) return false
     if (miniPlayerBvid != requestBvid) return false
-    if (requestCid <= 0L) return false
+    if (requestCid <= 0L) return miniPlayerCid > 0L
     return miniPlayerCid > 0L && miniPlayerCid == requestCid
 }
 
@@ -115,7 +115,7 @@ internal fun shouldRestoreCachedUiState(
     requestCid: Long
 ): Boolean {
     if (cachedBvid != requestBvid) return false
-    if (requestCid <= 0L) return false
+    if (requestCid <= 0L) return cachedCid > 0L
     return cachedCid > 0L && cachedCid == requestCid
 }
 
