@@ -39,7 +39,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 //  共享元素过渡
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 
 import com.android.purebilibili.core.ui.LocalSharedTransitionScope
@@ -59,6 +58,7 @@ import com.android.purebilibili.core.ui.transition.resolveVideoCardSharedTransit
 import com.android.purebilibili.core.ui.transition.shouldEnableVideoCoverSharedTransition
 import com.android.purebilibili.core.ui.transition.shouldEnableVideoMetadataSharedTransition
 import com.android.purebilibili.core.ui.transition.videoCoverSharedElementKey
+import com.android.purebilibili.core.ui.transition.videoSharedElementBoundsTransformSpec
 import com.android.purebilibili.feature.home.resolveHomeCardEnterAnimationEnabledAtMount
 import com.android.purebilibili.feature.video.ui.section.resolveCompactPublishTimeRowText
 import io.github.alexzhirkevich.cupertino.icons.CupertinoIcons
@@ -353,7 +353,7 @@ fun StoryVideoCard(
                     sharedContentState = rememberSharedContentState(key = com.android.purebilibili.core.ui.transition.videoTitleSharedElementKey(video.bvid)),
                     animatedVisibilityScope = requireNotNull(animatedVisibilityScope),
                     boundsTransform = { _, _ ->
-                        spring(dampingRatio = 0.8f, stiffness = 200f)
+                        videoSharedElementBoundsTransformSpec(cardSharedTransitionMotionSpec)
                     }
                 )
             }
@@ -394,7 +394,7 @@ fun StoryVideoCard(
                         sharedContentState = rememberSharedContentState(key = com.android.purebilibili.core.ui.transition.videoUpNameSharedElementKey(video.bvid)),
                         animatedVisibilityScope = requireNotNull(animatedVisibilityScope),
                         boundsTransform = { _, _ ->
-                            spring(dampingRatio = 0.8f, stiffness = 200f)
+                            videoSharedElementBoundsTransformSpec(cardSharedTransitionMotionSpec)
                         }
                     )
                 }
@@ -422,7 +422,7 @@ fun StoryVideoCard(
                                     sharedContentState = rememberSharedContentState(key = com.android.purebilibili.core.ui.transition.videoAvatarSharedElementKey(video.bvid)),
                                     animatedVisibilityScope = requireNotNull(animatedVisibilityScope),
                                     boundsTransform = { _, _ ->
-                                        spring(dampingRatio = 0.8f, stiffness = 200f)
+                                        videoSharedElementBoundsTransformSpec(cardSharedTransitionMotionSpec)
                                     },
                                     clipInOverlayDuringTransition = OverlayClip(CircleShape)
                                 )
@@ -470,7 +470,7 @@ fun StoryVideoCard(
                                     sharedContentState = rememberSharedContentState(key = com.android.purebilibili.core.ui.transition.videoViewsSharedElementKey(video.bvid)),
                                     animatedVisibilityScope = requireNotNull(animatedVisibilityScope),
                                     boundsTransform = { _, _ ->
-                                        spring(dampingRatio = 0.8f, stiffness = 200f)
+                                        videoSharedElementBoundsTransformSpec(cardSharedTransitionMotionSpec)
                                     }
                                 )
                             }
@@ -507,7 +507,7 @@ fun StoryVideoCard(
                                      sharedContentState = rememberSharedContentState(key = com.android.purebilibili.core.ui.transition.videoDanmakuSharedElementKey(video.bvid)),
                                      animatedVisibilityScope = requireNotNull(animatedVisibilityScope),
                                      boundsTransform = { _, _ ->
-                                         spring(dampingRatio = 0.8f, stiffness = 200f)
+                                         videoSharedElementBoundsTransformSpec(cardSharedTransitionMotionSpec)
                                      }
                                  )
                              }

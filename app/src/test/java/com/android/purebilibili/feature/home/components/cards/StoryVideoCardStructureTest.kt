@@ -2,9 +2,22 @@ package com.android.purebilibili.feature.home.components.cards
 
 import java.io.File
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class StoryVideoCardStructureTest {
+
+    @Test
+    fun storySharedMetadataUsesCoverTimelineWithoutSpringOvershoot() {
+        val source = File("src/main/java/com/android/purebilibili/feature/home/components/cards/StoryVideoCard.kt")
+            .readText()
+        val sharedTimelineCall = "videoSharedElementBoundsTransformSpec(cardSharedTransitionMotionSpec)"
+
+        assertTrue(
+            source.windowed(sharedTimelineCall.length).count { it == sharedTimelineCall } >= 5
+        )
+        assertFalse(source.contains("spring(dampingRatio = 0.8f, stiffness = 200f)"))
+    }
 
     @Test
     fun storyCoverContainerClipsPlaceholderAndImageTogether() {
