@@ -2,8 +2,6 @@
 package com.android.purebilibili.feature.dynamic.components
 
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,13 +15,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import com.android.purebilibili.data.model.response.DynamicItem
 import com.android.purebilibili.data.model.response.ReplyItem
@@ -35,6 +33,7 @@ import com.android.purebilibili.feature.video.ui.components.FanGroupDecorationBa
 import com.android.purebilibili.feature.video.ui.components.resolveFanGroupDecorationCardBgs
 import com.android.purebilibili.feature.video.ui.components.resolveFanGroupVisualFromMemberAndSailing
 import com.android.purebilibili.feature.video.ui.components.resolveInlineSubReplyToggleLabel
+import com.android.purebilibili.feature.video.ui.components.resolveReplyPreviewTextContent
 import com.android.purebilibili.feature.video.ui.components.resolveVisibleSubReplies
 import com.android.purebilibili.feature.video.ui.components.shouldShowInlineSubReplyToggle
 import io.github.alexzhirkevich.cupertino.icons.CupertinoIcons
@@ -117,6 +116,24 @@ fun DynamicCommentSheet(
     var commentText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val canLoadMore = comments.size < totalCount && !isLoading && !isLoadingMore
+    var showImagePreview by remember { mutableStateOf(false) }
+    var previewImages by remember { mutableStateOf<List<String>>(emptyList()) }
+    var previewInitialIndex by remember { mutableIntStateOf(0) }
+    var previewSourceRect by remember { mutableStateOf<Rect?>(null) }
+    var previewTextContent by remember { mutableStateOf<ImagePreviewTextContent?>(null) }
+
+    if (showImagePreview && previewImages.isNotEmpty()) {
+        ImagePreviewDialog(
+            images = previewImages,
+            initialIndex = previewInitialIndex,
+            sourceRect = previewSourceRect,
+            textContent = previewTextContent,
+            onDismiss = {
+                showImagePreview = false
+                previewTextContent = null
+            }
+        )
+    }
 
     LaunchedEffect(listState, comments.size, totalCount, isLoading, isLoadingMore) {
         snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1 }
@@ -208,7 +225,14 @@ fun DynamicCommentSheet(
                     items(comments, key = { it.rpid }) { reply ->
                         CommentItem(
                             reply = reply,
-                            onViewReplies = onViewReplies
+                            onViewReplies = onViewReplies,
+                            onImagePreview = { images, index, rect, textContent ->
+                                previewImages = images
+                                previewInitialIndex = index
+                                previewSourceRect = rect
+                                previewTextContent = textContent
+                                showImagePreview = true
+                            }
                         )
                     }
                     if (isLoadingMore) {
@@ -276,7 +300,8 @@ fun DynamicCommentSheet(
 @Composable
 private fun CommentItem(
     reply: ReplyItem,
-    onViewReplies: (ReplyItem) -> Unit
+    onViewReplies: (ReplyItem) -> Unit,
+    onImagePreview: (List<String>, Int, Rect?, ImagePreviewTextContent?) -> Unit
 ) {
     val member = reply.member
     var isSubPreviewExpanded by remember(reply.rpid) { mutableStateOf(false) }
@@ -351,12 +376,15 @@ private fun CommentItem(
             // 评论图片
             if (!reply.content.pictures.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                val context = LocalContext.current
                 CommentPictures(
                     pictures = reply.content.pictures,
-                    onImageClick = { images, index, _ ->
-                        val url = images.getOrNull(index) ?: return@CommentPictures
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                    onImageClick = { images, index, rect ->
+                        onImagePreview(
+                            images,
+                            index,
+                            rect,
+                            resolveReplyPreviewTextContent(reply)
+                        )
                     }
                 )
             }
