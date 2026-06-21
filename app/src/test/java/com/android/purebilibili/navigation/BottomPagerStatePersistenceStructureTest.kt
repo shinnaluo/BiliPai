@@ -29,11 +29,15 @@ class BottomPagerStatePersistenceStructureTest {
     @Test
     fun `main bottom pager delegates distant jumps to pager pre jump animation`() {
         val source = loadSource("app/src/main/java/com/android/purebilibili/navigation/MainBottomPagerState.kt")
+        val animatedNavigationSource = source
+            .substringAfter("fun animateToPage(")
+            .substringBefore("fun syncPage(")
 
         assertTrue(source.contains("navigationStartPage"))
         assertTrue(source.contains("pagerState.animateScrollToPage("))
         assertFalse(source.contains("pagerState.animateScrollBy("))
         assertFalse(source.contains("shouldUseDirectBottomPagerJump("))
+        assertFalse(animatedNavigationSource.contains("pagerState.scrollToPage("))
     }
 
     private fun loadSource(path: String): String {

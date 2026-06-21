@@ -52,9 +52,6 @@ internal class MainBottomPagerState(
                 )
             } finally {
                 if (navJob == myJob) {
-                    if (pagerState.currentPage != targetIndex) {
-                        pagerState.scrollToPage(targetIndex)
-                    }
                     isNavigating = false
                     selectedPage = targetIndex
                     navigationStartPage = targetIndex
