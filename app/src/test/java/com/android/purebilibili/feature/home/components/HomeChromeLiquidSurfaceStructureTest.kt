@@ -121,6 +121,12 @@ class HomeChromeLiquidSurfaceStructureTest {
             topTabChrome.readText().contains("Modifier.clip(tabShape)")
         )
         assertTrue(
+            "top tab matched surface should allow the enlarged indicator to draw beyond the dock",
+            topTabChrome.readText().contains("clipContent = false") &&
+                topBarSource.contains("clipContent: Boolean = true") &&
+                bottomBar.readText().contains("clipContent: Boolean = true")
+        )
+        assertTrue(
             "top tab chrome should center the fixed-height tab row inside the taller shell",
             topTabChrome.readText().contains("contentAlignment = Alignment.Center")
         )

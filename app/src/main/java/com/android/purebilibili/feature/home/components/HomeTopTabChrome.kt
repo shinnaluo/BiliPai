@@ -145,6 +145,7 @@ internal fun HomeTopTabChrome(
                             Modifier.homeTopBottomBarMatchedSurface(
                                 renderMode = tabChromeRenderMode,
                                 shape = tabShape,
+                                clipContent = false,
                                 hazeState = hazeState,
                                 backdrop = backdrop,
                                 liquidGlassStyle = liquidStyle,

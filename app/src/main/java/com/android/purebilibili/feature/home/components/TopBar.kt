@@ -635,6 +635,7 @@ internal fun resolveIosTopTabCapsuleContainerColor(
 internal fun Modifier.homeTopBottomBarMatchedSurface(
     renderMode: HomeTopChromeRenderMode,
     shape: Shape,
+    clipContent: Boolean = true,
     hazeState: HazeState?,
     backdrop: LayerBackdrop?,
     liquidGlassStyle: LiquidGlassStyle,
@@ -662,6 +663,7 @@ internal fun Modifier.homeTopBottomBarMatchedSurface(
     }
     this.kernelSuFloatingDockSurface(
         shape = shape,
+        clipContent = clipContent,
         backdrop = backdrop,
         containerColor = containerColor,
         blurEnabled = isBlurEnabled,
