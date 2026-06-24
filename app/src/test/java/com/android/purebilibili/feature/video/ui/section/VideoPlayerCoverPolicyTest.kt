@@ -1,6 +1,7 @@
 package com.android.purebilibili.feature.video.ui.section
 
 import com.android.purebilibili.core.ui.transition.VideoSharedTransitionTargetMode
+import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -228,5 +229,18 @@ class VideoPlayerCoverPolicyTest {
             assertTrue(resolveForcedReturnCoverSharedElementSourceRoute("$route?from=tab") == route)
         }
         assertTrue(resolveForcedReturnCoverSharedElementSourceRoute("settings") == null)
+    }
+
+    @Test
+    fun detailReturnCoverUsesSingleAlphaTimelineWithoutCoilCrossfade() {
+        val source = File("src/main/java/com/android/purebilibili/feature/video/screen/VideoDetailScreen.kt")
+            .readText()
+        val returnCoverBlock = source
+            .substringAfter("if (crossfadeCoverUrl.isNotBlank()) {")
+            .substringBefore("contentScale = ContentScale.Crop")
+
+        assertTrue(returnCoverBlock.contains(".crossfade(false)"))
+        assertTrue(returnCoverBlock.contains(".graphicsLayer { alpha = coverCrossfadeAlpha.value }"))
+        assertFalse(returnCoverBlock.contains(".alpha(coverCrossfadeAlpha)"))
     }
 }

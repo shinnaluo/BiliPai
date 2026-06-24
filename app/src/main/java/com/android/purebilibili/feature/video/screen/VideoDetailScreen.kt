@@ -3436,7 +3436,7 @@ fun VideoDetailScreen(
                         } else {
                             0
                         }
-                        val coverCrossfadeAlpha by animateFloatAsState(
+                        val coverCrossfadeAlpha = animateFloatAsState(
                             targetValue = if (isLeaving) 1f else 0f,
                             animationSpec = tween(
                                 durationMillis = returnAlphaDurationMillis,
@@ -3444,7 +3444,7 @@ fun VideoDetailScreen(
                             ),
                             label = "coverCrossfade"
                         )
-                        val playerFadeAlpha by animateFloatAsState(
+                        val playerFadeAlpha = animateFloatAsState(
                             targetValue = if (isLeaving) 0f else 1f,
                             animationSpec = tween(
                                 durationMillis = returnAlphaDurationMillis,
@@ -3503,12 +3503,12 @@ fun VideoDetailScreen(
                                 AsyncImage(
                                     model = coil.request.ImageRequest.Builder(LocalContext.current)
                                         .data(crossfadeCoverUrl)
-                                        .crossfade(true)
+                                        .crossfade(false)
                                         .build(),
                                     contentDescription = "cover",
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .alpha(coverCrossfadeAlpha),
+                                        .graphicsLayer { alpha = coverCrossfadeAlpha.value },
                                     contentScale = ContentScale.Crop
                                 )
                             }
@@ -3516,7 +3516,7 @@ fun VideoDetailScreen(
                                 modifier = Modifier
                                     .fillMaxSize()
                                     .padding(top = playerTopInset)
-                                    .alpha(playerFadeAlpha)
+                                    .graphicsLayer { alpha = playerFadeAlpha.value }
                             ) {
                             PortraitInlineVideoPlayerHost(
                                 modifier = Modifier.align(Alignment.TopCenter),
