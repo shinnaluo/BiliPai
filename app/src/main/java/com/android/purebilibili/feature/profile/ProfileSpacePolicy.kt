@@ -33,7 +33,10 @@ data class ProfileSpaceTabChromeSpec(
     val controlContainerAlpha: Float,
     val selectedIndicatorAlpha: Float,
     val selectedTextAlpha: Float,
-    val unselectedTextAlpha: Float
+    val unselectedTextAlpha: Float,
+    val rowCornerRadiusDp: Int,
+    val rowHorizontalInsetDp: Int,
+    val rowVerticalInsetDp: Int
 )
 
 data class ProfileSpaceWallpaperChromePalette(
@@ -113,7 +116,10 @@ fun resolveProfileSpaceTabChromeSpec(): ProfileSpaceTabChromeSpec {
         controlContainerAlpha = 0.82f,
         selectedIndicatorAlpha = 0.18f,
         selectedTextAlpha = 1f,
-        unselectedTextAlpha = 0.76f
+        unselectedTextAlpha = 0.76f,
+        rowCornerRadiusDp = 28,
+        rowHorizontalInsetDp = 20,
+        rowVerticalInsetDp = 6
     )
 }
 

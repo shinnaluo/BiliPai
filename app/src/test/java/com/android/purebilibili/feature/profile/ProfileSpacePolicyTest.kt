@@ -452,6 +452,9 @@ class ProfileSpacePolicyTest {
         assertTrue(spec.selectedTextAlpha >= 0.95f)
         assertTrue(spec.unselectedTextAlpha >= 0.65f)
         assertTrue(spec.selectedIndicatorAlpha in 0.12f..0.22f)
+        assertTrue(spec.rowCornerRadiusDp >= 24)
+        assertTrue(spec.rowHorizontalInsetDp >= 16)
+        assertTrue(spec.rowVerticalInsetDp >= 4)
     }
 
     @Test

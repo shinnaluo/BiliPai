@@ -1528,6 +1528,10 @@ private fun ProfileSpaceTabs(
 ) {
     val tabs = remember { defaultProfileSpaceTabs() }
     val context = LocalContext.current
+    val chromeSpec = remember { resolveProfileSpaceTabChromeSpec() }
+    val rowContainerShape = remember(chromeSpec.rowCornerRadiusDp) {
+        RoundedCornerShape(chromeSpec.rowCornerRadiusDp.dp)
+    }
     val bottomBarLiquidGlassEnabled by SettingsManager
         .getBottomBarLiquidGlassEnabled(context)
         .collectAsStateWithLifecycle(initialValue = true)
@@ -1539,8 +1543,12 @@ private fun ProfileSpaceTabs(
             onSelected = { index -> tabs.getOrNull(index)?.let { onTabSelected(it.tab) } },
             modifier = Modifier
                 .fillMaxWidth()
-                .background(chromePalette.rowContainerColor)
-                .padding(horizontal = 18.dp, vertical = 8.dp),
+                .padding(
+                    horizontal = chromeSpec.rowHorizontalInsetDp.dp,
+                    vertical = chromeSpec.rowVerticalInsetDp.dp
+                )
+                .background(chromePalette.rowContainerColor, rowContainerShape)
+                .padding(horizontal = 10.dp, vertical = 8.dp),
             height = 46.dp,
             indicatorHeight = 40.dp,
             labelFontSize = 16.sp,
@@ -1556,9 +1564,13 @@ private fun ProfileSpaceTabs(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(chromePalette.rowContainerColor)
+            .padding(
+                horizontal = chromeSpec.rowHorizontalInsetDp.dp,
+                vertical = chromeSpec.rowVerticalInsetDp.dp
+            )
+            .background(chromePalette.rowContainerColor, rowContainerShape)
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 18.dp),
+            .padding(horizontal = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(28.dp)
     ) {
         tabs.forEach { item ->
