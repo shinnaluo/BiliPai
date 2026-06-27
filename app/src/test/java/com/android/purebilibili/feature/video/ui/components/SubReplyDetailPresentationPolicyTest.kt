@@ -30,6 +30,48 @@ class SubReplyDetailPresentationPolicyTest {
     }
 
     @Test
+    fun `sub reply prefetch continues when list cannot scroll but more replies remain`() {
+        assertTrue(
+            shouldPrefetchSubRepliesWhenListNotScrollable(
+                loadedReplyCount = 20,
+                totalReplyCount = 157,
+                isLoading = false,
+                isEnd = false,
+                canScrollForward = false
+            )
+        )
+        assertFalse(
+            shouldPrefetchSubRepliesWhenListNotScrollable(
+                loadedReplyCount = 20,
+                totalReplyCount = 157,
+                isLoading = false,
+                isEnd = false,
+                canScrollForward = true
+            )
+        )
+    }
+
+    @Test
+    fun `sub reply manual load more appears while declared total exceeds loaded count`() {
+        assertTrue(
+            shouldShowSubReplyManualLoadMore(
+                loadedReplyCount = 20,
+                totalReplyCount = 157,
+                isLoading = false,
+                isEnd = false
+            )
+        )
+        assertFalse(
+            shouldShowSubReplyManualLoadMore(
+                loadedReplyCount = 157,
+                totalReplyCount = 157,
+                isLoading = false,
+                isEnd = false
+            )
+        )
+    }
+
+    @Test
     fun `sub reply detail reveal motion staggers by hierarchy`() {
         assertEquals(40, resolveSubReplyDetailRevealDelayMillis(levelIndex = 0))
         assertEquals(95, resolveSubReplyDetailRevealDelayMillis(levelIndex = 1))

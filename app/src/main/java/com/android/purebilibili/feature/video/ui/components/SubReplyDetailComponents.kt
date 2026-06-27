@@ -67,6 +67,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -177,6 +178,51 @@ internal fun resolveSubReplyDetailSectionTitle(
     } else {
         "相关回复共${total}条"
     }
+}
+
+internal fun resolveLazyListCanScrollForward(
+    lastVisibleIndex: Int,
+    lastVisibleEndOffset: Int,
+    totalItemsCount: Int,
+    viewportEndOffset: Int
+): Boolean {
+    if (totalItemsCount <= 0 || lastVisibleIndex < 0) return false
+    if (lastVisibleIndex < totalItemsCount - 1) return true
+    return lastVisibleEndOffset > viewportEndOffset
+}
+
+internal fun shouldLoadMoreSubReplyList(
+    lastVisibleIndex: Int,
+    totalItemsCount: Int,
+    isLoading: Boolean,
+    isEnd: Boolean,
+    prefetchThreshold: Int = 2
+): Boolean {
+    if (isLoading || isEnd || totalItemsCount <= 0 || lastVisibleIndex < 0) return false
+    val triggerIndex = (totalItemsCount - 1 - prefetchThreshold).coerceAtLeast(0)
+    return lastVisibleIndex >= triggerIndex
+}
+
+internal fun shouldPrefetchSubRepliesWhenListNotScrollable(
+    loadedReplyCount: Int,
+    totalReplyCount: Int,
+    isLoading: Boolean,
+    isEnd: Boolean,
+    canScrollForward: Boolean
+): Boolean {
+    if (isLoading || isEnd) return false
+    if (totalReplyCount <= loadedReplyCount.coerceAtLeast(0)) return false
+    return !canScrollForward
+}
+
+internal fun shouldShowSubReplyManualLoadMore(
+    loadedReplyCount: Int,
+    totalReplyCount: Int,
+    isLoading: Boolean,
+    isEnd: Boolean
+): Boolean {
+    if (isLoading || isEnd) return false
+    return totalReplyCount > loadedReplyCount.coerceAtLeast(0)
 }
 
 internal fun resolveSubReplyDetailDisplayCount(
@@ -431,18 +477,71 @@ internal fun SubReplyDetailContent(
             visibleReplies = visibleReplies
         )
     }
-    val shouldLoadMore by remember {
+    val listScrollMetrics by remember {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
-            val lastVisible = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            !localConversationMode &&
-                lastVisible >= layoutInfo.totalItemsCount - 2 &&
-                !isLoading &&
-                !isEnd
+            val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()
+            Triple(
+                lastVisibleItem?.index ?: -1,
+                (lastVisibleItem?.offset ?: 0) + (lastVisibleItem?.size ?: 0),
+                layoutInfo.totalItemsCount to layoutInfo.viewportEndOffset
+            )
         }
+    }
+    val canScrollForward = remember(listScrollMetrics) {
+        val (lastVisibleIndex, lastVisibleEndOffset, totalAndViewport) = listScrollMetrics
+        val (totalItemsCount, viewportEndOffset) = totalAndViewport
+        resolveLazyListCanScrollForward(
+            lastVisibleIndex = lastVisibleIndex,
+            lastVisibleEndOffset = lastVisibleEndOffset,
+            totalItemsCount = totalItemsCount,
+            viewportEndOffset = viewportEndOffset
+        )
+    }
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            val (lastVisibleIndex, _, totalAndViewport) = listScrollMetrics
+            !localConversationMode &&
+                shouldLoadMoreSubReplyList(
+                    lastVisibleIndex = lastVisibleIndex,
+                    totalItemsCount = totalAndViewport.first,
+                    isLoading = isLoading,
+                    isEnd = isEnd
+                )
+        }
+    }
+    val shouldPrefetchShortList by remember {
+        derivedStateOf {
+            !localConversationMode &&
+                shouldPrefetchSubRepliesWhenListNotScrollable(
+                    loadedReplyCount = visibleReplies.size,
+                    totalReplyCount = detailReplyDisplayCount,
+                    isLoading = isLoading,
+                    isEnd = isEnd,
+                    canScrollForward = canScrollForward
+                )
+        }
+    }
+    val showManualLoadMore = remember(
+        visibleReplies.size,
+        detailReplyDisplayCount,
+        isLoading,
+        isEnd,
+        localConversationMode
+    ) {
+        !localConversationMode &&
+            shouldShowSubReplyManualLoadMore(
+                loadedReplyCount = visibleReplies.size,
+                totalReplyCount = detailReplyDisplayCount,
+                isLoading = isLoading,
+                isEnd = isEnd
+            )
     }
     LaunchedEffect(shouldLoadMore) {
         if (shouldLoadMore) onLoadMore()
+    }
+    LaunchedEffect(shouldPrefetchShortList, visibleReplies.size, detailReplyDisplayCount) {
+        if (shouldPrefetchShortList) onLoadMore()
     }
     LaunchedEffect(listScrollResetKey) {
         listState.scrollToItem(0)
@@ -671,14 +770,29 @@ internal fun SubReplyDetailContent(
             }
 
             item(key = "footer") {
-                if (isLoading) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CupertinoActivityIndicator()
+                when {
+                    isLoading -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CupertinoActivityIndicator()
+                        }
+                    }
+                    showManualLoadMore -> {
+                        Text(
+                            text = "加载更多回复",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(onClick = onLoadMore)
+                                .padding(horizontal = 16.dp, vertical = 18.dp),
+                            textAlign = TextAlign.Center,
+                            fontSize = 14.sp,
+                            color = appearance.sortTint,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
