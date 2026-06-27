@@ -30,7 +30,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
@@ -63,9 +62,6 @@ import com.android.purebilibili.core.ui.AppSurfaceTokens
 import com.android.purebilibili.core.ui.ContainerLevel
 import com.android.purebilibili.core.ui.TopReadabilityChrome
 import com.android.purebilibili.core.ui.rememberAppBackIcon
-import com.android.purebilibili.core.ui.adaptive.resolveDeviceUiProfile
-import com.android.purebilibili.core.ui.adaptive.resolveEffectiveMotionTier
-import com.android.purebilibili.feature.settings.ui.settingsRootCategoryExitBlurModifier
 import com.android.purebilibili.core.plugin.PluginManager
 
 import com.android.purebilibili.core.ui.blur.hazeSourceCompat
@@ -1287,11 +1283,6 @@ private fun MobileSettingsLayout(
     val context = LocalContext.current
     val listState = rememberLazyListState()
     val windowSizeClass = LocalWindowSizeClass.current
-    val deviceUiProfile = remember(windowSizeClass.widthSizeClass) {
-        resolveDeviceUiProfile(
-            widthSizeClass = windowSizeClass.widthSizeClass
-        )
-    }
     val sectionOrder = remember { resolveSettingsRootCategoryOrder() }
     var activeRootCategoryName by rememberSaveable { mutableStateOf<String?>(null) }
     val activeRootCategory = remember(activeRootCategoryName) {
@@ -1308,34 +1299,6 @@ private fun MobileSettingsLayout(
     val entranceAnimationEnabled by SettingsManager.getUiEntranceAnimationEnabled(context)
         .collectAsStateWithLifecycle(initialValue = true)
     val reduceMotion = rememberSystemReduceMotion()
-    val motionTier = remember(deviceUiProfile.motionTier, entranceAnimationEnabled) {
-        resolveEffectiveMotionTier(
-            baseTier = deviceUiProfile.motionTier,
-            animationEnabled = entranceAnimationEnabled
-        )
-    }
-    val transitionBlurEnabled = remember(
-        entranceAnimationEnabled,
-        reduceMotion,
-        motionTier
-    ) {
-        resolveSettingsRootCategoryTransitionBlurEnabled(
-            animationEnabled = entranceAnimationEnabled,
-            reduceMotion = reduceMotion,
-            sdkInt = Build.VERSION.SDK_INT,
-            motionTier = motionTier
-        )
-    }
-    val density = LocalDensity.current
-    val maxTransitionBlurRadiusPx = remember(density, motionTier, transitionBlurEnabled) {
-        if (!transitionBlurEnabled) {
-            0f
-        } else {
-            with(density) {
-                resolveSettingsRootCategoryMaxBlurRadiusDp(motionTier).dp.toPx()
-            }
-        }
-    }
     val focusRequest by SettingsSearchFocusController.request.collectAsStateWithLifecycle()
     val bottomBarVisible = LocalBottomBarVisible.current
     val bottomInset = resolveSettingsContentBottomPadding(
@@ -1497,13 +1460,7 @@ private fun MobileSettingsLayout(
                     label = "SettingsRootBody"
                 ) { destination ->
                     val settled = !transition.isRunning
-                    Box(
-                        modifier = settingsRootCategoryExitBlurModifier(
-                            contentKey = destination,
-                            blurEnabled = transitionBlurEnabled,
-                            maxBlurRadiusPx = maxTransitionBlurRadiusPx
-                        )
-                    ) {
+                    key(destination) {
                     EntranceGroup(startWhen = settled) {
                         when (destination) {
                             SettingsRootBodyDestination.Home -> {
@@ -1548,11 +1505,7 @@ private fun MobileSettingsLayout(
                                 }
                             }
                             is SettingsRootBodyDestination.Category -> {
-                                Box(
-                                    modifier = Modifier
-                                        .padding(top = 12.dp)
-                                        .entrance()
-                                ) {
+                                Box(modifier = Modifier.padding(top = 12.dp)) {
                                     SettingsRootCategoryContent(
                                         category = destination.category,
                                         actions = rootCategoryActions,
@@ -1562,6 +1515,7 @@ private fun MobileSettingsLayout(
                             }
                             SettingsRootBodyDestination.Search -> {
                                 Column {
+                                    SettingsRootCategoryEntranceSection {
                                     SettingsSearchResultsSection(
                                         results = searchResults,
                                         onResultClick = { result ->
@@ -1574,6 +1528,7 @@ private fun MobileSettingsLayout(
                                             }
                                         }
                                     )
+                                    }
                                     Spacer(modifier = Modifier.height(16.dp))
                                 }
                             }

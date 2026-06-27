@@ -49,6 +49,7 @@ import com.android.purebilibili.core.ui.rememberAppSparklesIcon
 import com.android.purebilibili.core.ui.rememberAppVisibilityOffIcon
 import com.android.purebilibili.core.ui.rememberAppWarningIcon
 import com.android.purebilibili.core.ui.rememberAppAnalyticsIcon
+import com.android.purebilibili.core.ui.animation.entrance
 import com.android.purebilibili.core.ui.AppShapes
 import com.android.purebilibili.core.ui.AppSurfaceTokens
 import com.android.purebilibili.core.ui.ContainerLevel
@@ -79,6 +80,7 @@ import kotlin.math.roundToInt
 // ═══════════════════════════════════════════════════
 
 // Delegated to core/ui/components/iOSListComponents.kt
+import com.android.purebilibili.core.ui.animation.entrance
 import com.android.purebilibili.core.ui.components.IOSSectionTitle as SettingsSectionTitle
 import com.android.purebilibili.core.ui.components.IOSGroup as SettingsGroup
 import com.android.purebilibili.core.ui.components.IOSSwitchItem as SettingSwitchItem
@@ -520,6 +522,15 @@ internal fun SettingsDetailEntrySection(
 }
 
 @Composable
+internal fun SettingsRootCategoryEntranceSection(
+    content: @Composable () -> Unit
+) {
+    Box(modifier = Modifier.entrance()) {
+        content()
+    }
+}
+
+@Composable
 internal fun SettingsRootCategoryContent(
     category: SettingsRootCategory,
     actions: SettingsRootCategoryActions,
@@ -528,200 +539,228 @@ internal fun SettingsRootCategoryContent(
     Column {
         when (category) {
             SettingsRootCategory.APPEARANCE_INTERACTION -> {
-                SettingsDetailGroup(title = "显示与交互") {
-                    SettingsDetailEntrySection(
-                        entries = listOf(
-                            SettingsDetailEntry(
-                                target = SettingsSearchTarget.INTERFACE_THEME,
-                                title = "外观设置",
-                                value = "UI 预设、主题、字体、DPI、动态图标与开屏",
-                                onClick = actions.onAppearanceClick
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "显示与交互") {
+                        SettingsDetailEntrySection(
+                            entries = listOf(
+                                SettingsDetailEntry(
+                                    target = SettingsSearchTarget.INTERFACE_THEME,
+                                    title = "外观设置",
+                                    value = "UI 预设、主题、字体、DPI、动态图标与开屏",
+                                    onClick = actions.onAppearanceClick
+                                )
                             )
                         )
-                    )
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                SettingsDetailGroup(title = "动效") {
-                    SettingsDetailEntrySection(
-                        entries = listOf(
-                            SettingsDetailEntry(
-                                target = SettingsSearchTarget.ANIMATION,
-                                title = "动效与图标",
-                                value = "过渡动画、触感反馈、动态图标与底栏搜索入口",
-                                onClick = actions.onAnimationClick
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "动效") {
+                        SettingsDetailEntrySection(
+                            entries = listOf(
+                                SettingsDetailEntry(
+                                    target = SettingsSearchTarget.ANIMATION,
+                                    title = "动效与图标",
+                                    value = "过渡动画、触感反馈、动态图标与底栏搜索入口",
+                                    onClick = actions.onAnimationClick
+                                )
                             )
                         )
-                    )
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                SettingsDetailGroup(title = "导航") {
-                    SettingsDetailEntrySection(
-                        entries = listOf(
-                            SettingsDetailEntry(
-                                target = SettingsSearchTarget.NAVIGATION,
-                                title = "导航与标签",
-                                value = "底栏、顶部标签、平板侧边栏与底栏项目顺序",
-                                onClick = actions.onBottomBarClick
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "导航") {
+                        SettingsDetailEntrySection(
+                            entries = listOf(
+                                SettingsDetailEntry(
+                                    target = SettingsSearchTarget.NAVIGATION,
+                                    title = "导航与标签",
+                                    value = "底栏、顶部标签、平板侧边栏与底栏项目顺序",
+                                    onClick = actions.onBottomBarClick
+                                )
                             )
                         )
-                    )
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                SettingsDetailGroup(title = "全屏与手势") {
-                    SettingsDetailEntrySection(
-                        entries = listOf(
-                            SettingsDetailEntry(
-                                target = SettingsSearchTarget.FULLSCREEN_GESTURE,
-                                title = "全屏与手势",
-                                value = "全屏方向、截图按钮、应用内截图、亮度/音量/进度手势",
-                                onClick = actions.onPlaybackClick
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "全屏与手势") {
+                        SettingsDetailEntrySection(
+                            entries = listOf(
+                                SettingsDetailEntry(
+                                    target = SettingsSearchTarget.FULLSCREEN_GESTURE,
+                                    title = "全屏与手势",
+                                    value = "全屏方向、截图按钮、应用内截图、亮度/音量/进度手势",
+                                    onClick = actions.onPlaybackClick
+                                )
                             )
                         )
-                    )
+                    }
                 }
             }
             SettingsRootCategory.CONTENT_PLAYBACK -> {
-                SettingsDetailGroup(title = "首页展示") {
-                    SettingsDetailEntrySection(
-                        entries = listOf(
-                            SettingsDetailEntry(
-                                target = SettingsSearchTarget.HOME_FEED,
-                                title = "首页展示",
-                                value = "展示样式、首页壁纸效果、推荐流卡片宽度",
-                                onClick = actions.onAppearanceClick
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "首页展示") {
+                        SettingsDetailEntrySection(
+                            entries = listOf(
+                                SettingsDetailEntry(
+                                    target = SettingsSearchTarget.HOME_FEED,
+                                    title = "首页展示",
+                                    value = "展示样式、首页壁纸效果、推荐流卡片宽度",
+                                    onClick = actions.onAppearanceClick
+                                )
                             )
                         )
-                    )
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                SettingsDetailGroup(title = "推荐流与动态") {
-                    FeedApiSection(
-                        feedApiType = state.feedApiType,
-                        onFeedApiTypeChange = actions.onFeedApiTypeChange,
-                        incrementalTimelineRefreshEnabled = state.incrementalTimelineRefreshEnabled,
-                        onIncrementalTimelineRefreshChange = actions.onIncrementalTimelineRefreshChange,
-                        dynamicImagePreviewTextVisible = state.dynamicImagePreviewTextVisible,
-                        onDynamicImagePreviewTextVisibleChange = actions.onDynamicImagePreviewTextVisibleChange,
-                        dynamicAllTabHorizontalUserListVisible = state.dynamicAllTabHorizontalUserListVisible,
-                        onDynamicAllTabHorizontalUserListVisibleChange =
-                            actions.onDynamicAllTabHorizontalUserListVisibleChange,
-                        dynamicVisibleTabIds = state.dynamicVisibleTabIds,
-                        onDynamicTabVisibilityChange = actions.onDynamicTabVisibilityChange,
-                        homeRefreshCount = state.homeRefreshCount,
-                        onHomeRefreshCountChange = actions.onHomeRefreshCountChange
-                    )
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "推荐流与动态") {
+                        FeedApiSection(
+                            feedApiType = state.feedApiType,
+                            onFeedApiTypeChange = actions.onFeedApiTypeChange,
+                            incrementalTimelineRefreshEnabled = state.incrementalTimelineRefreshEnabled,
+                            onIncrementalTimelineRefreshChange = actions.onIncrementalTimelineRefreshChange,
+                            dynamicImagePreviewTextVisible = state.dynamicImagePreviewTextVisible,
+                            onDynamicImagePreviewTextVisibleChange = actions.onDynamicImagePreviewTextVisibleChange,
+                            dynamicAllTabHorizontalUserListVisible = state.dynamicAllTabHorizontalUserListVisible,
+                            onDynamicAllTabHorizontalUserListVisibleChange =
+                                actions.onDynamicAllTabHorizontalUserListVisibleChange,
+                            dynamicVisibleTabIds = state.dynamicVisibleTabIds,
+                            onDynamicTabVisibilityChange = actions.onDynamicTabVisibilityChange,
+                            homeRefreshCount = state.homeRefreshCount,
+                            onHomeRefreshCountChange = actions.onHomeRefreshCountChange
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                SettingsDetailGroup(title = "画质与播放") {
-                    SettingsDetailEntrySection(
-                        entries = listOf(
-                            SettingsDetailEntry(
-                                target = SettingsSearchTarget.PLAYBACK_QUALITY,
-                                title = "播放与画质",
-                                value = "解码、默认画质、自动最高画质、网络、省流量、字幕、倍速与连播",
-                                onClick = actions.onPlaybackClick
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "画质与播放") {
+                        SettingsDetailEntrySection(
+                            entries = listOf(
+                                SettingsDetailEntry(
+                                    target = SettingsSearchTarget.PLAYBACK_QUALITY,
+                                    title = "播放与画质",
+                                    value = "解码、默认画质、自动最高画质、网络、省流量、字幕、倍速与连播",
+                                    onClick = actions.onPlaybackClick
+                                )
                             )
                         )
-                    )
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                SettingsDetailGroup(title = "互动") {
-                    SettingsDetailEntrySection(
-                        entries = listOf(
-                            SettingsDetailEntry(
-                                target = SettingsSearchTarget.INTERACTION_COMMENT,
-                                title = "互动与评论",
-                                value = "评论发送检测、评论装扮、AI 总结、双击点赞与视频简介",
-                                onClick = actions.onPlaybackClick
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "互动") {
+                        SettingsDetailEntrySection(
+                            entries = listOf(
+                                SettingsDetailEntry(
+                                    target = SettingsSearchTarget.INTERACTION_COMMENT,
+                                    title = "互动与评论",
+                                    value = "评论发送检测、评论装扮、AI 总结、双击点赞与视频简介",
+                                    onClick = actions.onPlaybackClick
+                                )
                             )
                         )
-                    )
+                    }
                 }
             }
             SettingsRootCategory.PRIVACY_STORAGE -> {
-                SettingsDetailGroup(title = "同步与存储") {
-                    DataStorageSection(
-                        customDownloadPath = state.customDownloadPath,
-                        customImageSavePath = state.customImageSavePath,
-                        cacheSize = state.cacheSize,
-                        onSettingsShareClick = actions.onSettingsShareClick,
-                        onWebDavBackupClick = actions.onWebDavBackupClick,
-                        onDownloadPathClick = actions.onDownloadPathClick,
-                        onImageSavePathClick = actions.onImageSavePathClick,
-                        onClearCacheClick = actions.onClearCacheClick
-                    )
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "同步与存储") {
+                        DataStorageSection(
+                            customDownloadPath = state.customDownloadPath,
+                            customImageSavePath = state.customImageSavePath,
+                            cacheSize = state.cacheSize,
+                            onSettingsShareClick = actions.onSettingsShareClick,
+                            onWebDavBackupClick = actions.onWebDavBackupClick,
+                            onDownloadPathClick = actions.onDownloadPathClick,
+                            onImageSavePathClick = actions.onImageSavePathClick,
+                            onClearCacheClick = actions.onClearCacheClick
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                SettingsDetailGroup(title = "隐私与安全") {
-                    PrivacySection(
-                        privacyModeEnabled = state.privacyModeEnabled,
-                        privacyContentAuthenticationEnabled = state.privacyContentAuthenticationEnabled,
-                        onPrivacyModeChange = actions.onPrivacyModeChange,
-                        onPrivacyContentAuthenticationChange = actions.onPrivacyContentAuthenticationChange,
-                        onPermissionClick = actions.onPermissionClick,
-                        onBlockedListClick = actions.onBlockedListClick
-                    )
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "隐私与安全") {
+                        PrivacySection(
+                            privacyModeEnabled = state.privacyModeEnabled,
+                            privacyContentAuthenticationEnabled = state.privacyContentAuthenticationEnabled,
+                            onPrivacyModeChange = actions.onPrivacyModeChange,
+                            onPrivacyContentAuthenticationChange = actions.onPrivacyContentAuthenticationChange,
+                            onPermissionClick = actions.onPermissionClick,
+                            onBlockedListClick = actions.onBlockedListClick
+                        )
+                    }
                 }
             }
             SettingsRootCategory.SYSTEM_ABOUT -> {
-                SettingsDetailGroup(title = "诊断与插件") {
-                    SettingsDetailEntrySection(
-                        entries = listOf(
-                            SettingsDetailEntry(
-                                target = SettingsSearchTarget.DIAGNOSTICS,
-                                title = "播放器诊断",
-                                value = "诊断日志、详细统计信息、画质降档弹窗与仅提示一次",
-                                onClick = actions.onPlaybackClick
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "诊断与插件") {
+                        SettingsDetailEntrySection(
+                            entries = listOf(
+                                SettingsDetailEntry(
+                                    target = SettingsSearchTarget.DIAGNOSTICS,
+                                    title = "播放器诊断",
+                                    value = "诊断日志、详细统计信息、画质降档弹窗与仅提示一次",
+                                    onClick = actions.onPlaybackClick
+                                )
                             )
                         )
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    DeveloperSection(
-                        crashTrackingEnabled = state.crashTrackingEnabled,
-                        analyticsEnabled = state.analyticsEnabled,
-                        pluginCount = state.pluginCount,
-                        onCrashTrackingChange = actions.onCrashTrackingChange,
-                        onAnalyticsChange = actions.onAnalyticsChange,
-                        onPluginsClick = actions.onPluginsClick,
-                        onExportLogsClick = actions.onExportLogsClick
-                    )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        DeveloperSection(
+                            crashTrackingEnabled = state.crashTrackingEnabled,
+                            analyticsEnabled = state.analyticsEnabled,
+                            pluginCount = state.pluginCount,
+                            onCrashTrackingChange = actions.onCrashTrackingChange,
+                            onAnalyticsChange = actions.onAnalyticsChange,
+                            onPluginsClick = actions.onPluginsClick,
+                            onExportLogsClick = actions.onExportLogsClick
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
-                SettingsDetailGroup(title = "关于与发布") {
-                    AboutSection(
-                        versionName = state.versionName,
-                        easterEggEnabled = state.easterEggEnabled,
-                        onLicenseClick = actions.onLicenseClick,
-                        onGithubClick = actions.onGithubClick,
-                        onVerificationClick = actions.onVerificationClick,
-                        onBuildSourceClick = actions.onBuildSourceClick,
-                        onBuildFingerprintClick = actions.onBuildFingerprintClick,
-                        onCheckUpdateClick = actions.onCheckUpdateClick,
-                        onViewReleaseNotesClick = actions.onViewReleaseNotesClick,
-                        autoCheckUpdateEnabled = state.autoCheckUpdateEnabled,
-                        onAutoCheckUpdateChange = actions.onAutoCheckUpdateChange,
-                        onVersionClick = actions.onVersionClick,
-                        onReplayOnboardingClick = actions.onReplayOnboardingClick,
-                        onEasterEggChange = actions.onEasterEggChange,
-                        updateStatusText = state.updateStatusText,
-                        isCheckingUpdate = state.isCheckingUpdate,
-                        verificationLabel = state.verificationLabel,
-                        verificationSubtitle = state.verificationSubtitle,
-                        buildSourceValue = state.buildSourceValue,
-                        buildSourceSubtitle = state.buildSourceSubtitle,
-                        buildFingerprintValue = state.buildFingerprintValue,
-                        buildFingerprintCopyValue = state.buildFingerprintCopyValue,
-                        buildFingerprintSubtitle = state.buildFingerprintSubtitle,
-                        versionClickCount = state.versionClickCount,
-                        versionClickThreshold = state.versionClickThreshold
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+                SettingsRootCategoryEntranceSection {
+                    SettingsDetailGroup(title = "关于与发布") {
+                        AboutSection(
+                            versionName = state.versionName,
+                            easterEggEnabled = state.easterEggEnabled,
+                            onLicenseClick = actions.onLicenseClick,
+                            onGithubClick = actions.onGithubClick,
+                            onVerificationClick = actions.onVerificationClick,
+                            onBuildSourceClick = actions.onBuildSourceClick,
+                            onBuildFingerprintClick = actions.onBuildFingerprintClick,
+                            onCheckUpdateClick = actions.onCheckUpdateClick,
+                            onViewReleaseNotesClick = actions.onViewReleaseNotesClick,
+                            autoCheckUpdateEnabled = state.autoCheckUpdateEnabled,
+                            onAutoCheckUpdateChange = actions.onAutoCheckUpdateChange,
+                            onVersionClick = actions.onVersionClick,
+                            onReplayOnboardingClick = actions.onReplayOnboardingClick,
+                            onEasterEggChange = actions.onEasterEggChange,
+                            updateStatusText = state.updateStatusText,
+                            isCheckingUpdate = state.isCheckingUpdate,
+                            verificationLabel = state.verificationLabel,
+                            verificationSubtitle = state.verificationSubtitle,
+                            buildSourceValue = state.buildSourceValue,
+                            buildSourceSubtitle = state.buildSourceSubtitle,
+                            buildFingerprintValue = state.buildFingerprintValue,
+                            buildFingerprintCopyValue = state.buildFingerprintCopyValue,
+                            buildFingerprintSubtitle = state.buildFingerprintSubtitle,
+                            versionClickCount = state.versionClickCount,
+                            versionClickThreshold = state.versionClickThreshold
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                SettingsRootCategoryEntranceSection {
                     ReleaseChannelPinnedCard(
                         onGithubClick = actions.onGithubClick,
                         onTelegramClick = actions.onTelegramClick,
                         onDisclaimerClick = actions.onDisclaimerClick
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                SettingsRootCategoryEntranceSection {
                     SupportToolsSection(
                         onTipsClick = actions.onTipsClick,
                         onOpenLinksClick = actions.onOpenLinksClick

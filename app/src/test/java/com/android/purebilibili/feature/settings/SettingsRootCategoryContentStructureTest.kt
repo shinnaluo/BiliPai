@@ -78,6 +78,25 @@ class SettingsRootCategoryContentStructureTest {
     }
 
     @Test
+    fun rootCategoryContent_staggersDetailGroupsWithEntranceSections() {
+        val source = listOf(
+            File("app/src/main/java/com/android/purebilibili/feature/settings/ui/SettingsSections.kt"),
+            File("src/main/java/com/android/purebilibili/feature/settings/ui/SettingsSections.kt")
+        ).first { it.exists() }.readText()
+
+        assertTrue(source.contains("internal fun SettingsRootCategoryEntranceSection("))
+        assertTrue(source.contains("Box(modifier = Modifier.entrance())"))
+        val contentBlock = source
+            .substringAfter("internal fun SettingsRootCategoryContent(")
+            .substringBefore("@Composable\nfun SupportToolsSection(")
+        assertTrue(contentBlock.contains("SettingsRootCategoryEntranceSection {"))
+        assertTrue(
+            contentBlock.indexOf("SettingsRootCategoryEntranceSection {") <
+                contentBlock.indexOf("SettingsDetailGroup(title = \"动效\")")
+        )
+    }
+
+    @Test
     fun rootCategoryContent_usesStableDetailGroupsWithoutSceneShortcutRows() {
         val source = listOf(
             File("app/src/main/java/com/android/purebilibili/feature/settings/ui/SettingsSections.kt"),
@@ -139,8 +158,8 @@ class SettingsRootCategoryContentStructureTest {
         assertTrue(source.contains("SettingsRootCategoryContent("))
         assertTrue(source.contains("AnimatedContent("))
         assertTrue(source.contains("resolveSettingsRootCategoryContentTransform("))
-        assertTrue(source.contains("settingsRootCategoryExitBlurModifier("))
-        assertTrue(source.contains("resolveSettingsRootCategoryTransitionBlurEnabled("))
+        assertTrue(source.contains("key(destination)"))
+        assertTrue(source.contains("EntranceGroup(startWhen = settled)"))
         assertTrue(source.contains("label = \"SettingsRootBody\""))
         assertFalse(source.contains("isExpanded ="), "should not use accordion isExpanded")
         assertFalse(source.contains("onToggle ="), "should not use accordion onToggle")
@@ -259,7 +278,7 @@ class SettingsRootCategoryContentStructureTest {
 
         assertTrue(settingsSections.contains("SettingsDetailGroup(title = \"显示与交互\")"))
         assertTrue(settingsSections.contains("SettingsDetailGroup(title = \"画质与播放\")"))
-        assertTrue(settingsSections.contains("Spacer(modifier = Modifier.height(12.dp))\n                SettingsDetailGroup(title = \"隐私与安全\")"))
+        assertTrue(settingsSections.contains("SettingsDetailGroup(title = \"隐私与安全\")"))
         assertTrue(appearance.contains("IOSSectionTitle(\"显示模式\")"))
         assertTrue(appearance.contains("IOSSectionTitle(\"字体与密度\")"))
         assertTrue(appearance.contains("IOSSectionTitle(\"开屏与图标\")"))
