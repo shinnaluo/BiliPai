@@ -76,14 +76,10 @@ fun PermissionSettingsScreen(
                         Icon(rememberAppBackIcon(), contentDescription = backLabel)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppSurfaceTokens.cardContainer(),
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                colors = settingsSubpageTopAppBarColors()
             )
         },
-        containerColor = AppSurfaceTokens.groupedListContainer(),
+        containerColor = settingsSubpageContainerColor(),
         contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         PermissionSettingsContent(

@@ -62,12 +62,10 @@ fun JsonPluginEditorScreen(
                         Icon(CupertinoIcons.Default.Checkmark, null)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppSurfaceTokens.cardContainer()
-                )
+                colors = settingsSubpageTopAppBarColors()
             )
         },
-        containerColor = AppSurfaceTokens.groupedListContainer()
+        containerColor = settingsSubpageContainerColor()
     ) { padding ->
         JsonPluginEditorContent(
             modifier = Modifier.padding(padding),

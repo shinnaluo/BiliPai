@@ -78,6 +78,20 @@ class MiuixV2MigrationStructureTest {
     }
 
     @Test
+    fun buildGradle_includesMiuixSquircleArtifact() {
+        val source = loadSource("app/build.gradle.kts")
+        assertTrue(source.contains("miuix-squircle-android"))
+    }
+
+    @Test
+    fun md3SegmentedControl_usesAdaptiveSquircleBackground() {
+        val source = loadSource(
+            "app/src/main/java/com/android/purebilibili/feature/settings/IOSSlidingSegmentedControl.kt"
+        )
+        assertTrue(source.contains("adaptiveSquircleBackground("))
+    }
+
+    @Test
     fun appSurfaceTokens_exposesFullMiuixSemanticPalette() {
         val source = loadSource("app/src/main/java/com/android/purebilibili/core/ui/AppSurfaceTokens.kt")
         listOf(

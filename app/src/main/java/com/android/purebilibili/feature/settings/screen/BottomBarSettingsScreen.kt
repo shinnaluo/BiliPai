@@ -210,14 +210,11 @@ fun BottomBarSettingsScreen(
                         Icon(rememberAppBackIcon(), contentDescription = backLabel)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                colors = settingsSubpageTopAppBarColors()
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = settingsSubpageContainerColor(),
+        contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         CompositionLocalProvider(LocalSettingsLiquidGlassEnabled provides settingsLiquidGlassEnabled) {
             BottomBarSettingsContent(

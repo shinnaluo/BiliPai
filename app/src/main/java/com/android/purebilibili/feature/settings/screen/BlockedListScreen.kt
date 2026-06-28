@@ -88,14 +88,10 @@ fun BlockedListScreen(
                         Icon(rememberAppBackIcon(), contentDescription = "返回")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppSurfaceTokens.cardContainer(),
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                colors = settingsSubpageTopAppBarColors()
             )
         },
-        containerColor = AppSurfaceTokens.groupedListContainer()
+        containerColor = settingsSubpageContainerColor()
     ) { padding ->
         BlockedListContent(
             blockedUps = blockedUps,

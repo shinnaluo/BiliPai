@@ -26,7 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,7 +50,8 @@ import com.android.purebilibili.core.theme.iOSPink
 import com.android.purebilibili.core.theme.iOSPurple
 import com.android.purebilibili.core.ui.AdaptiveScaffold
 import com.android.purebilibili.core.ui.AdaptiveTopAppBar
-import com.android.purebilibili.core.ui.AppSurfaceTokens
+import com.android.purebilibili.feature.settings.settingsSubpageContainerColor
+import com.android.purebilibili.feature.settings.settingsSubpageTopAppBarColors
 import com.android.purebilibili.core.ui.IOSAlertDialog
 import com.android.purebilibili.core.ui.IOSDialogAction
 import com.android.purebilibili.core.ui.components.IOSClickableItem
@@ -118,14 +119,10 @@ fun SettingsShareScreen(
                         Icon(rememberAppBackIcon(), contentDescription = backLabel)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppSurfaceTokens.groupedListContainer(),
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                colors = settingsSubpageTopAppBarColors()
             )
         },
-        containerColor = AppSurfaceTokens.groupedListContainer(),
+        containerColor = settingsSubpageContainerColor(),
         contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         Box(

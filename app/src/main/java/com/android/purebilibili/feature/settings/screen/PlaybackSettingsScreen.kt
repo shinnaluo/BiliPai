@@ -82,14 +82,10 @@ fun PlaybackSettingsScreen(
                         Icon(rememberAppBackIcon(), contentDescription = backLabel)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppSurfaceTokens.groupedListContainer(),
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                colors = settingsSubpageTopAppBarColors()
             )
         },
-        containerColor = AppSurfaceTokens.groupedListContainer(),
+        containerColor = settingsSubpageContainerColor(),
         contentWindowInsets = WindowInsets(0.dp)
     ) { padding ->
         CompositionLocalProvider(LocalSettingsLiquidGlassEnabled provides state.isLiquidGlassEnabled) {

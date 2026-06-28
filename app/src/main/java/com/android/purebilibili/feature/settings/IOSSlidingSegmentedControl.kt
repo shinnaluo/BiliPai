@@ -32,12 +32,13 @@ import com.android.purebilibili.core.theme.LocalAndroidNativeVariant
 import com.android.purebilibili.core.theme.AndroidNativeVariant
 import com.android.purebilibili.core.theme.UiPreset
 import com.android.purebilibili.core.ui.AppShapes
+import com.android.purebilibili.core.ui.AppSurfaceTokens
 import com.android.purebilibili.core.ui.ContainerLevel
+import com.android.purebilibili.core.ui.adaptiveSquircleBackground
 import com.android.purebilibili.feature.home.components.BOTTOM_BAR_LIQUID_SEGMENTED_CONTROL_HEIGHT_DP
 import com.android.purebilibili.feature.home.components.BOTTOM_BAR_LIQUID_SEGMENTED_CONTROL_INDICATOR_HEIGHT_DP
 import com.android.purebilibili.feature.home.components.BottomBarLiquidSegmentedControl
 import com.kyant.backdrop.Backdrop
-import com.android.purebilibili.core.ui.AppSurfaceTokens
 
 internal fun resolveMd3SegmentedLabelFontSizeSp(
     optionCount: Int,
@@ -228,13 +229,19 @@ private fun <T> Md3SegmentedControl(
             longestLabelLength = longestLabelLength
         ).sp
     }
+    val uiPreset = LocalUiPreset.current
+    val pillCornerRadius = AppShapes.resolveContainerCornerDp(
+        level = ContainerLevel.Pill,
+        uiPreset = uiPreset,
+        androidNativeVariant = androidNativeVariant
+    )
     Box(
         modifier = modifier
             .fillMaxWidth()
-            // Outer segmented container uses the preset-aware pill radius
-            // (iOS 10 / MD3 28 / Miuix 22dp) — replaces the hardcoded 24dp.
-            .clip(AppShapes.container(ContainerLevel.Pill))
-            .background(colorTokens.outerContainerColor)
+            .adaptiveSquircleBackground(
+                color = colorTokens.outerContainerColor,
+                cornerRadius = pillCornerRadius
+            )
             .padding(4.dp)
     ) {
         SingleChoiceSegmentedButtonRow(

@@ -106,11 +106,7 @@ fun IconSettingsScreen(
                         Icon(rememberAppBackIcon(), contentDescription = backLabel)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                )
+                colors = settingsSubpageTopAppBarColors()
             )
         },
         containerColor = resolveIconSettingsContainerColor(
