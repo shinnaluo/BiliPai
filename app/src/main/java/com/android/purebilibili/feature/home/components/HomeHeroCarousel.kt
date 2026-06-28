@@ -7,14 +7,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -325,57 +323,58 @@ private fun HomeHeroCarouselCard(
                         )
                     )
             )
-            Column(
+            // 标题
+            Row(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .fillMaxWidth()
                     .padding(start = 28.dp, end = 28.dp, bottom = 18.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (activeForPlayback) {
-                        Icon(
-                            imageVector = Icons.Rounded.PlayArrow,
-                            contentDescription = null,
-                            tint = Color.White.copy(alpha = 0.9f),
-                            modifier = Modifier.size(22.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                    }
-                    Text(
-                        text = video.title,
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                if (activeForPlayback) {
+                    Icon(
+                        imageVector = Icons.Rounded.PlayArrow,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.9f),
+                        modifier = Modifier.size(22.dp)
                     )
+                    Spacer(modifier = Modifier.width(6.dp))
                 }
-                if (video.duration > 0 || video.stat.view > 0 || video.stat.danmaku > 0) {
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = buildString {
-                            if (video.duration > 0) {
-                                append(FormatUtils.formatDuration(video.duration))
-                            }
-                            if (video.stat.view > 0) {
-                                if (isNotEmpty()) append(" · ")
-                                append(FormatUtils.formatStat(video.stat.view.toLong()))
-                                append("播放")
-                            }
-                            if (video.stat.danmaku > 0) {
-                                if (isNotEmpty()) append(" · ")
-                                append(FormatUtils.formatStat(video.stat.danmaku.toLong()))
-                                append("弹幕")
-                            }
-                        },
-                        color = Color.White.copy(alpha = 0.65f),
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Normal,
-                        maxLines = 1
-                    )
-                }
+                Text(
+                    text = video.title,
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            // 统计信息（右下角，避免遮挡左下角的点状指示器）
+            if (video.duration > 0 || video.stat.view > 0 || video.stat.danmaku > 0) {
+                Text(
+                    text = buildString {
+                        if (video.duration > 0) {
+                            append(FormatUtils.formatDuration(video.duration))
+                        }
+                        if (video.stat.view > 0) {
+                            if (isNotEmpty()) append(" · ")
+                            append(FormatUtils.formatStat(video.stat.view.toLong()))
+                            append("播放")
+                        }
+                        if (video.stat.danmaku > 0) {
+                            if (isNotEmpty()) append(" · ")
+                            append(FormatUtils.formatStat(video.stat.danmaku.toLong()))
+                            append("弹幕")
+                        }
+                    },
+                    color = Color.White.copy(alpha = 0.65f),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 28.dp, bottom = 18.dp)
+                )
             }
         }
     }
