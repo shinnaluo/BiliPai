@@ -36,7 +36,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.android.purebilibili.R
 import com.android.purebilibili.core.ui.rememberAppCollectionIcon
 import com.android.purebilibili.core.ui.rememberAppDynamicIcon
@@ -1686,21 +1685,22 @@ fun AboutSection(
 
 internal data class AboutContributor(
     val name: String,
-    val githubLogin: String
+    val githubLogin: String,
+    val avatarResId: Int
 ) {
     val profileUrl: String get() = "https://github.com/$githubLogin"
-    val avatarUrl: String get() = "$profileUrl.png?size=160"
 }
 
 // ponytail: 静态列表避免关于页每次打开都请求 GitHub；需要实时同步时再接 contributors API。
-// 头像已预置为本地 WebP 资源，无需网络请求。
+// 头像已预置为本地图片资源，无需网络请求。
 internal val AboutContributors = listOf(
-    AboutContributor("jay3-yy", "jay3-yy"),
-    AboutContributor("Chenx Dust", "chenx-dust"),
-    AboutContributor("usontong", "usontong"),
-    AboutContributor("Leko", "lekoOwO"),
-    AboutContributor("TanakaLun", "TanakaLun"),
-    AboutContributor("Matt Van Horn", "mvanhorn")
+    AboutContributor("jay3-yy", "jay3-yy", R.drawable.avatar_jay3_yy),
+    AboutContributor("Chenx Dust", "chenx-dust", R.drawable.avatar_chenx_dust),
+    AboutContributor("usontong", "usontong", R.drawable.avatar_usontong),
+    AboutContributor("Leko", "lekoOwO", R.drawable.avatar_lekoowo),
+    AboutContributor("TanakaLun", "TanakaLun", R.drawable.avatar_tanakalun),
+    AboutContributor("Matt Van Horn", "mvanhorn", R.drawable.avatar_mvanhorn),
+    AboutContributor("qyo123oyq", "qyo123oyq", R.drawable.avatar_qyo123oyq)
 )
 
 private val AboutSlogans = listOf(
@@ -1822,8 +1822,8 @@ private fun AboutContributorItem(
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
-            AsyncImage(
-                model = contributor.avatarUrl,
+            Image(
+                painter = painterResource(id = contributor.avatarResId),
                 contentDescription = "${contributor.name} 头像",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.matchParentSize()
