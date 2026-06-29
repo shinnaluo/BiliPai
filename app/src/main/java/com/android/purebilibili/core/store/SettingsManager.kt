@@ -641,6 +641,16 @@ enum class DanmakuPanelWidthMode(val value: Int, val label: String, val widthFra
     }
 }
 
+enum class PortraitDanmakuDisplayAreaMode(val value: Int, val label: String) {
+    VIDEO_VIEWPORT(0, "视频画面"),
+    SCREEN_TOP(1, "屏幕顶部");
+
+    companion object {
+        fun fromValue(value: Int): PortraitDanmakuDisplayAreaMode =
+            entries.find { it.value == value } ?: VIDEO_VIEWPORT
+    }
+}
+
 enum class TabletCommentPanelWidthPreset(
     val value: Int,
     val label: String
@@ -706,6 +716,8 @@ data class DanmakuSettings(
     val hideInteractiveCommands: Boolean = false,
     val blockAttentionCommands: Boolean = false,
     val smartOcclusion: Boolean = false,
+    val portraitDisplayAreaMode: PortraitDanmakuDisplayAreaMode =
+        PortraitDanmakuDisplayAreaMode.VIDEO_VIEWPORT,
     val fullscreenPanelWidthMode: DanmakuPanelWidthMode = DanmakuPanelWidthMode.THIRD,
     val blockRulesRaw: String = "",
     val blockRules: List<String> = emptyList()
@@ -3185,6 +3197,10 @@ object SettingsManager {
         floatPreferencesKey(buildScopedDanmakuKeyName(scope, "speed"))
     private fun keyDanmakuArea(scope: DanmakuSettingsScope) =
         floatPreferencesKey(buildScopedDanmakuKeyName(scope, "area"))
+    private fun keyDanmakuPortraitDisplayAreaMode() =
+        intPreferencesKey(
+            buildScopedDanmakuKeyName(DanmakuSettingsScope.PORTRAIT, "display_area_mode")
+        )
     private fun keyDanmakuFontWeight(scope: DanmakuSettingsScope) =
         intPreferencesKey(buildScopedDanmakuKeyName(scope, "font_weight"))
     private fun keyDanmakuStrokeWidth(scope: DanmakuSettingsScope) =
@@ -3396,6 +3412,14 @@ object SettingsManager {
                 legacyKey = KEY_DANMAKU_SMART_OCCLUSION,
                 defaultValue = false
             ),
+            portraitDisplayAreaMode = if (scope == DanmakuSettingsScope.PORTRAIT) {
+                PortraitDanmakuDisplayAreaMode.fromValue(
+                    preferences[keyDanmakuPortraitDisplayAreaMode()]
+                        ?: PortraitDanmakuDisplayAreaMode.VIDEO_VIEWPORT.value
+                )
+            } else {
+                PortraitDanmakuDisplayAreaMode.VIDEO_VIEWPORT
+            },
             fullscreenPanelWidthMode = normalizeDanmakuFullscreenPanelWidthMode(
                 DanmakuPanelWidthMode.fromValue(
                     preferences[KEY_DANMAKU_FULLSCREEN_PANEL_WIDTH_MODE]
@@ -3539,6 +3563,15 @@ object SettingsManager {
     ) {
         context.settingsDataStore.edit { preferences ->
             preferences[keyDanmakuArea(scope)] = normalizeDanmakuDisplayArea(value)
+        }
+    }
+
+    suspend fun setPortraitDanmakuDisplayAreaMode(
+        context: Context,
+        value: PortraitDanmakuDisplayAreaMode
+    ) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[keyDanmakuPortraitDisplayAreaMode()] = value.value
         }
     }
 

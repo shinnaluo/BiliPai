@@ -44,6 +44,7 @@ class DanmakuSettingsMappingPolicyTest {
         assertFalse(result.hideInteractiveCommands)
         assertFalse(result.blockAttentionCommands)
         assertFalse(result.smartOcclusion)
+        assertEquals(PortraitDanmakuDisplayAreaMode.VIDEO_VIEWPORT, result.portraitDisplayAreaMode)
         assertEquals(DanmakuPanelWidthMode.THIRD, result.fullscreenPanelWidthMode)
         assertEquals("", result.blockRulesRaw)
         assertEquals(emptyList(), result.blockRules)
@@ -151,6 +152,30 @@ class DanmakuSettingsMappingPolicyTest {
         val result = mapDanmakuSettingsFromPreferences(prefs, portraitScope)
 
         assertEquals(DanmakuPanelWidthMode.THIRD, result.fullscreenPanelWidthMode)
+    }
+
+    @Test
+    fun portraitDisplayAreaMode_readsScopedPreferenceAndFallsBackToVideoViewport() {
+        val screenTopPrefs = mutablePreferencesOf(
+            intPreferencesKey("danmaku_portrait_display_area_mode") to
+                PortraitDanmakuDisplayAreaMode.SCREEN_TOP.value
+        )
+        val invalidPrefs = mutablePreferencesOf(
+            intPreferencesKey("danmaku_portrait_display_area_mode") to 99
+        )
+
+        assertEquals(
+            PortraitDanmakuDisplayAreaMode.SCREEN_TOP,
+            mapDanmakuSettingsFromPreferences(screenTopPrefs, portraitScope).portraitDisplayAreaMode
+        )
+        assertEquals(
+            PortraitDanmakuDisplayAreaMode.VIDEO_VIEWPORT,
+            mapDanmakuSettingsFromPreferences(invalidPrefs, portraitScope).portraitDisplayAreaMode
+        )
+        assertEquals(
+            PortraitDanmakuDisplayAreaMode.VIDEO_VIEWPORT,
+            mapDanmakuSettingsFromPreferences(screenTopPrefs, landscapeScope).portraitDisplayAreaMode
+        )
     }
 
     @Test

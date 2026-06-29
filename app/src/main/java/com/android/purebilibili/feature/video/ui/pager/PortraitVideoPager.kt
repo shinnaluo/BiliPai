@@ -106,6 +106,7 @@ import com.android.purebilibili.core.util.NetworkUtils
 import com.android.purebilibili.feature.plugin.PlaybackCdnPlugin
 import com.android.purebilibili.core.store.DanmakuSettingsScope
 import com.android.purebilibili.core.store.PlaybackCompletionBehavior
+import com.android.purebilibili.core.store.PortraitDanmakuDisplayAreaMode
 import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.core.store.TokenManager
 import com.android.purebilibili.core.util.FormatUtils
@@ -229,6 +230,7 @@ fun PortraitVideoPager(
     val effectiveDanmakuFontScale = resolvePortraitDanmakuReadableFontScale(danmakuFontScale)
     val danmakuSpeed = danmakuSettings.speed
     val danmakuDisplayArea = danmakuSettings.displayArea
+    val portraitDanmakuDisplayAreaMode = danmakuSettings.portraitDisplayAreaMode
     val danmakuMergeDuplicates = danmakuSettings.mergeDuplicates
     val danmakuDuplicateMergeWindowMs = danmakuSettings.duplicateMergeWindowMs
     val danmakuDuplicateMergeCountThreshold = danmakuSettings.duplicateMergeCountThreshold
@@ -1094,6 +1096,7 @@ fun PortraitVideoPager(
                 danmakuManager = danmakuManager,
                 danmakuEnabled = danmakuEnabled,
                 danmakuSmartOcclusion = danmakuSmartOcclusion,
+                portraitDanmakuDisplayAreaMode = portraitDanmakuDisplayAreaMode,
                 onExitSnapshot = onExitSnapshot,
                 onSearchClick = onSearchClick,
                 onUserClick = handleUserClick,
@@ -1159,6 +1162,7 @@ private fun VideoPageItem(
     danmakuManager: DanmakuManager,
     danmakuEnabled: Boolean,
     danmakuSmartOcclusion: Boolean,
+    portraitDanmakuDisplayAreaMode: PortraitDanmakuDisplayAreaMode,
     onExitSnapshot: (String, Long, Long) -> Unit,
     onSearchClick: () -> Unit,
     onUserClick: (Long) -> Unit,
@@ -1728,7 +1732,10 @@ private fun VideoPageItem(
                 translationY = commentExpansionTransform.translationYPx
                 transformOrigin = TransformOrigin(0.5f, 0f)
             }
-        val danmakuSurfaceMode = resolvePortraitDanmakuSurfaceMode(currentVideoAspect)
+        val danmakuSurfaceMode = resolvePortraitDanmakuSurfaceMode(
+            currentVideoAspect = currentVideoAspect,
+            displayAreaMode = portraitDanmakuDisplayAreaMode
+        )
         val viewportTransformModifier = Modifier
             .fillMaxSize()
             .graphicsLayer {
@@ -2595,9 +2602,14 @@ private fun PortraitDanmakuOverlay(
 
 internal fun resolvePortraitPagerRepeatMode(): Int = Player.REPEAT_MODE_OFF
 
-internal fun resolvePortraitDanmakuSurfaceMode(currentVideoAspect: Float): PortraitDanmakuSurfaceMode {
-    // 显示区域比例应以视频画面为基准；挂在整页会让 1/4 在横向视频里看起来接近半屏。
-    return PortraitDanmakuSurfaceMode.VideoViewport
+internal fun resolvePortraitDanmakuSurfaceMode(
+    currentVideoAspect: Float,
+    displayAreaMode: PortraitDanmakuDisplayAreaMode
+): PortraitDanmakuSurfaceMode {
+    return when (displayAreaMode) {
+        PortraitDanmakuDisplayAreaMode.VIDEO_VIEWPORT -> PortraitDanmakuSurfaceMode.VideoViewport
+        PortraitDanmakuDisplayAreaMode.SCREEN_TOP -> PortraitDanmakuSurfaceMode.Page
+    }
 }
 
 internal fun shouldInsetPortraitDanmakuFromStatusBar(

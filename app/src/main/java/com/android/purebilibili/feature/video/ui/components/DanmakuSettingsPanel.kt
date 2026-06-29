@@ -3,6 +3,7 @@ package com.android.purebilibili.feature.video.ui.components
 
 import com.android.purebilibili.core.store.DanmakuPanelWidthMode
 import com.android.purebilibili.core.store.DanmakuSettingsScope
+import com.android.purebilibili.core.store.PortraitDanmakuDisplayAreaMode
 import com.android.purebilibili.feature.video.danmaku.DanmakuBlockRuleSections
 import com.android.purebilibili.feature.video.danmaku.DanmakuCloudSyncStatus
 import com.android.purebilibili.feature.video.danmaku.DanmakuCloudSyncUiState
@@ -280,6 +281,8 @@ fun DanmakuSettingsPanel(
     blockRulesRaw: String = "",
     smartOcclusion: Boolean = true,
     fullscreenWidthMode: DanmakuPanelWidthMode = DanmakuPanelWidthMode.THIRD,
+    portraitDisplayAreaMode: PortraitDanmakuDisplayAreaMode =
+        PortraitDanmakuDisplayAreaMode.VIDEO_VIEWPORT,
     syncUiState: DanmakuCloudSyncUiState = DanmakuCloudSyncUiState(),
     onOpacityChange: (Float) -> Unit,
     onFontScaleChange: (Float) -> Unit,
@@ -305,6 +308,7 @@ fun DanmakuSettingsPanel(
     onBlockRulesRawChange: (String) -> Unit = {},
     onSmartOcclusionChange: (Boolean) -> Unit = {},
     onFullscreenWidthModeChange: (DanmakuPanelWidthMode) -> Unit = {},
+    onPortraitDisplayAreaModeChange: (PortraitDanmakuDisplayAreaMode) -> Unit = {},
     onCloudSyncEnabledChange: (Boolean) -> Unit = {},
     onSyncNowClick: () -> Unit = {},
     onDismiss: () -> Unit
@@ -792,6 +796,15 @@ fun DanmakuSettingsPanel(
                         colors = panelColors,
                         fullscreenStyle = isFullscreenStyle
                     )
+
+                    if (settingsScope == DanmakuSettingsScope.PORTRAIT) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        PortraitDanmakuDisplayAreaModeSelector(
+                            currentMode = portraitDisplayAreaMode,
+                            onModeChange = onPortraitDisplayAreaModeChange,
+                            colors = panelColors
+                        )
+                    }
                 
                     Spacer(modifier = Modifier.height(16.dp))
                 
@@ -1348,6 +1361,73 @@ private fun DanmakuFilterSwitchRow(
         }
         if (showDivider) {
             HorizontalDivider(color = colors.dividerColor)
+        }
+    }
+}
+
+/**
+ * 竖屏弹幕显示区域选择器
+ */
+@Composable
+private fun PortraitDanmakuDisplayAreaModeSelector(
+    currentMode: PortraitDanmakuDisplayAreaMode,
+    onModeChange: (PortraitDanmakuDisplayAreaMode) -> Unit,
+    colors: DanmakuSettingsPanelSurfaceColors
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = colors.itemColor,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "竖屏弹幕显示区域",
+                color = colors.titleColor,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                PortraitDanmakuDisplayAreaMode.entries.forEach { mode ->
+                    val isSelected = currentMode == mode
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .then(
+                                if (isSelected) {
+                                    Modifier.background(MaterialTheme.colorScheme.primary)
+                                } else {
+                                    Modifier
+                                        .background(colors.fieldBackgroundColor)
+                                        .border(
+                                            1.dp,
+                                            colors.fieldBorderColor,
+                                            RoundedCornerShape(12.dp)
+                                        )
+                                }
+                            )
+                            .clickable { onModeChange(mode) }
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = mode.label,
+                            color = if (isSelected) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                colors.titleColor
+                            },
+                            fontSize = 14.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
         }
     }
 }

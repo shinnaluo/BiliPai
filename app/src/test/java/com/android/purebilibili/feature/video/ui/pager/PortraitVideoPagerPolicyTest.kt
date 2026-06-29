@@ -1,5 +1,6 @@
 package com.android.purebilibili.feature.video.ui.pager
 
+import com.android.purebilibili.core.store.PortraitDanmakuDisplayAreaMode
 import com.android.purebilibili.data.model.response.Owner
 import com.android.purebilibili.data.model.response.RelatedVideo
 import com.android.purebilibili.data.model.response.Stat
@@ -239,15 +240,21 @@ class PortraitVideoPagerPolicyTest {
     fun portraitDanmakuSurface_usesVideoViewportSoDisplayAreaMatchesVideoHeight() {
         assertEquals(
             PortraitDanmakuSurfaceMode.VideoViewport,
-            resolvePortraitDanmakuSurfaceMode(currentVideoAspect = 16f / 9f)
+            resolvePortraitDanmakuSurfaceMode(
+                currentVideoAspect = 16f / 9f,
+                displayAreaMode = PortraitDanmakuDisplayAreaMode.VIDEO_VIEWPORT
+            )
         )
     }
 
     @Test
-    fun portraitDanmakuSurface_usesVideoViewportForPortraitVideoToo() {
+    fun portraitDanmakuSurface_usesPageTopWhenDisplayAreaModeRequestsScreenTop() {
         assertEquals(
-            PortraitDanmakuSurfaceMode.VideoViewport,
-            resolvePortraitDanmakuSurfaceMode(currentVideoAspect = 9f / 16f)
+            PortraitDanmakuSurfaceMode.Page,
+            resolvePortraitDanmakuSurfaceMode(
+                currentVideoAspect = 9f / 16f,
+                displayAreaMode = PortraitDanmakuDisplayAreaMode.SCREEN_TOP
+            )
         )
     }
 

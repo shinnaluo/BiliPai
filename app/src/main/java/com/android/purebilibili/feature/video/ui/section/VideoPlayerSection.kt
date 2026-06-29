@@ -1904,6 +1904,7 @@ fun VideoPlayerSection(
         val danmakuAllowSpecial = danmakuSettings.allowSpecial
         val danmakuHideInteractiveCommands = danmakuSettings.hideInteractiveCommands
         val danmakuSmartOcclusion = danmakuSettings.smartOcclusion
+        val portraitDanmakuDisplayAreaMode = danmakuSettings.portraitDisplayAreaMode
         val danmakuFullscreenPanelWidthMode by com.android.purebilibili.core.store.SettingsManager
             .getDanmakuFullscreenPanelWidthMode(context)
             .collectAsStateWithLifecycle(
@@ -3894,6 +3895,7 @@ fun VideoPlayerSection(
                 danmakuBlockRulesRaw = danmakuBlockRulesRaw,
                 danmakuSmartOcclusion = danmakuSmartOcclusion,
                 danmakuFullscreenPanelWidthMode = danmakuFullscreenPanelWidthMode,
+                portraitDanmakuDisplayAreaMode = portraitDanmakuDisplayAreaMode,
                 showDanmakuSyncSection = isLoggedIn,
                 danmakuCloudSyncEnabled = danmakuCloudSyncEnabled,
                 danmakuSyncUiState = danmakuCloudSyncUiState,
@@ -4116,6 +4118,12 @@ fun VideoPlayerSection(
                 onDanmakuFullscreenPanelWidthModeChange = { value ->
                     scope.launch {
                         com.android.purebilibili.core.store.SettingsManager.setDanmakuFullscreenPanelWidthMode(context, value)
+                    }
+                },
+                onPortraitDanmakuDisplayAreaModeChange = { value ->
+                    scope.launch {
+                        com.android.purebilibili.core.store.SettingsManager
+                            .setPortraitDanmakuDisplayAreaMode(context, value)
                     }
                 },
                 onDanmakuCloudSyncEnabledChange = { enabled ->

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.Player
 import com.android.purebilibili.core.store.DanmakuPanelWidthMode
+import com.android.purebilibili.core.store.PortraitDanmakuDisplayAreaMode
 import com.android.purebilibili.core.theme.BiliPink
 import com.android.purebilibili.core.ui.blur.unifiedBlur
 import com.android.purebilibili.core.util.FormatUtils
@@ -480,6 +481,8 @@ fun VideoPlayerOverlay(
     danmakuBlockRulesRaw: String = "",
     danmakuSmartOcclusion: Boolean = true,
     danmakuFullscreenPanelWidthMode: DanmakuPanelWidthMode = DanmakuPanelWidthMode.THIRD,
+    portraitDanmakuDisplayAreaMode: PortraitDanmakuDisplayAreaMode =
+        PortraitDanmakuDisplayAreaMode.VIDEO_VIEWPORT,
     showDanmakuSyncSection: Boolean = false,
     danmakuCloudSyncEnabled: Boolean = true,
     danmakuSyncUiState: DanmakuCloudSyncUiState = DanmakuCloudSyncUiState(),
@@ -507,6 +510,7 @@ fun VideoPlayerOverlay(
     onDanmakuBlockRulesRawChange: (String) -> Unit = {},
     onDanmakuSmartOcclusionChange: (Boolean) -> Unit = {},
     onDanmakuFullscreenPanelWidthModeChange: (DanmakuPanelWidthMode) -> Unit = {},
+    onPortraitDanmakuDisplayAreaModeChange: (PortraitDanmakuDisplayAreaMode) -> Unit = {},
     onDanmakuCloudSyncEnabledChange: (Boolean) -> Unit = {},
     onDanmakuSyncNowClick: () -> Unit = {},
     subtitleControlState: SubtitleControlUiState = SubtitleControlUiState(),
@@ -1771,6 +1775,7 @@ fun VideoPlayerOverlay(
                 blockRulesRaw = danmakuBlockRulesRaw,
                 smartOcclusion = danmakuSmartOcclusion,
                 fullscreenWidthMode = danmakuFullscreenPanelWidthMode,
+                portraitDisplayAreaMode = portraitDanmakuDisplayAreaMode,
                 showSyncSection = showDanmakuSyncSection,
                 cloudSyncEnabled = danmakuCloudSyncEnabled,
                 syncUiState = danmakuSyncUiState,
@@ -1798,6 +1803,7 @@ fun VideoPlayerOverlay(
                 onBlockRulesRawChange = onDanmakuBlockRulesRawChange,
                 onSmartOcclusionChange = onDanmakuSmartOcclusionChange,
                 onFullscreenWidthModeChange = onDanmakuFullscreenPanelWidthModeChange,
+                onPortraitDisplayAreaModeChange = onPortraitDanmakuDisplayAreaModeChange,
                 onCloudSyncEnabledChange = onDanmakuCloudSyncEnabledChange,
                 onSyncNowClick = onDanmakuSyncNowClick,
                 onDismiss = { showDanmakuSettings = false }

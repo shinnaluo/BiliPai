@@ -1078,6 +1078,9 @@ fun FullscreenPlayerOverlay(
             var localFullscreenPanelWidthMode by remember(danmakuSettings.fullscreenPanelWidthMode) {
                 mutableStateOf(danmakuSettings.fullscreenPanelWidthMode)
             }
+            var localPortraitDisplayAreaMode by remember(danmakuSettings.portraitDisplayAreaMode) {
+                mutableStateOf(danmakuSettings.portraitDisplayAreaMode)
+            }
             
             DanmakuSettingsPanel(
                 isFullscreen = true,
@@ -1099,6 +1102,7 @@ fun FullscreenPlayerOverlay(
                 blockRulesRaw = localBlockRulesRaw,
                 smartOcclusion = localSmartOcclusion,
                 fullscreenWidthMode = localFullscreenPanelWidthMode,
+                portraitDisplayAreaMode = localPortraitDisplayAreaMode,
                 onOpacityChange = { 
                     localOpacity = it
                     danmakuManager.opacity = it
@@ -1168,6 +1172,10 @@ fun FullscreenPlayerOverlay(
                 onFullscreenWidthModeChange = {
                     localFullscreenPanelWidthMode = it
                     scope.launch { SettingsManager.setDanmakuFullscreenPanelWidthMode(context, it) }
+                },
+                onPortraitDisplayAreaModeChange = {
+                    localPortraitDisplayAreaMode = it
+                    scope.launch { SettingsManager.setPortraitDanmakuDisplayAreaMode(context, it) }
                 },
                 onDismiss = { showDanmakuSettings = false }
             )

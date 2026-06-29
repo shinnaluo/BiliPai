@@ -1220,6 +1220,9 @@ private fun VideoDetailDanmakuSettingsPanel(
     var localHideInteractiveCommands by remember(danmakuSettings.hideInteractiveCommands) {
         mutableStateOf(danmakuSettings.hideInteractiveCommands)
     }
+    var localPortraitDisplayAreaMode by remember(danmakuSettings.portraitDisplayAreaMode) {
+        mutableStateOf(danmakuSettings.portraitDisplayAreaMode)
+    }
     var localBlockRulesRaw by remember(danmakuSettings.blockRulesRaw) { mutableStateOf(danmakuSettings.blockRulesRaw) }
 
     DanmakuSettingsPanel(
@@ -1238,6 +1241,7 @@ private fun VideoDetailDanmakuSettingsPanel(
         allowColorful = localAllowColorful,
         allowSpecial = localAllowSpecial,
         hideInteractiveCommands = localHideInteractiveCommands,
+        portraitDisplayAreaMode = localPortraitDisplayAreaMode,
         showBlockRuleEditor = true,
         showSmartOcclusionSection = false,
         blockRulesRaw = localBlockRulesRaw,
@@ -1293,6 +1297,10 @@ private fun VideoDetailDanmakuSettingsPanel(
         onHideInteractiveCommandsChange = {
             localHideInteractiveCommands = it
             scope.launch { SettingsManager.setDanmakuHideInteractiveCommands(context, it) }
+        },
+        onPortraitDisplayAreaModeChange = {
+            localPortraitDisplayAreaMode = it
+            scope.launch { SettingsManager.setPortraitDanmakuDisplayAreaMode(context, it) }
         },
         onBlockRulesRawChange = {
             localBlockRulesRaw = it
