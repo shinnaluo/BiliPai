@@ -20,8 +20,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress // [New]
+import com.android.purebilibili.core.ui.AppShapes
+import com.android.purebilibili.core.ui.ContainerLevel
 import androidx.compose.ui.input.pointer.pointerInput // [New]
 import androidx.compose.ui.zIndex // [New]
 import androidx.compose.ui.draw.scale // [New]
@@ -386,7 +387,7 @@ fun BottomBarSettingsContent(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(AppShapes.container(ContainerLevel.Field))
                                     .clickable { visibilityModeExpanded = !visibilityModeExpanded }
                                     .padding(vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -433,7 +434,7 @@ fun BottomBarSettingsContent(
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .clip(RoundedCornerShape(10.dp))
+                                                .clip(AppShapes.container(ContainerLevel.Field))
                                                 .background(
                                                     if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
                                                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
@@ -520,7 +521,7 @@ fun BottomBarSettingsContent(
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(12.dp))
+                                            .clip(AppShapes.container(ContainerLevel.Card))
                                             .clickable { 
                                                 scope.launch { SettingsManager.setBottomBarLabelMode(context, mode) }
                                             }
@@ -607,7 +608,7 @@ fun BottomBarSettingsContent(
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(12.dp))
+                                            .clip(AppShapes.container(ContainerLevel.Card))
                                             .clickable {
                                                 scope.launch { SettingsManager.setTopTabLabelMode(context, mode) }
                                             }
@@ -676,7 +677,7 @@ fun BottomBarSettingsContent(
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(12.dp))
+                                            .clip(AppShapes.container(ContainerLevel.Card))
                                             .clickable {
                                                 scope.launch {
                                                     SettingsManager.setHomeTopRightAction(context, action)
@@ -748,7 +749,7 @@ fun BottomBarSettingsContent(
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(12.dp))
+                                            .clip(AppShapes.container(ContainerLevel.Card))
                                             .clickable {
                                                 scope.launch {
                                                     SettingsManager.setHomeHeaderBlurMode(context, mode)
@@ -818,7 +819,7 @@ fun BottomBarSettingsContent(
                                     Column(
                                         horizontalAlignment = Alignment.CenterHorizontally,
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(12.dp))
+                                            .clip(AppShapes.container(ContainerLevel.Card))
                                             .clickable {
                                                 scope.launch {
                                                     SettingsManager.setHomeTopLayoutOrder(context, order)
@@ -878,7 +879,7 @@ fun BottomBarSettingsContent(
                                     Column(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clip(RoundedCornerShape(12.dp))
+                                            .clip(AppShapes.container(ContainerLevel.Card))
                                             .clickable {
                                                 val nextMode = resolveHomeHeaderCollapseModeForTopTabs(
                                                     currentMode = homeHeaderCollapseMode,
@@ -936,7 +937,7 @@ fun BottomBarSettingsContent(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
+                                        .clip(AppShapes.container(ContainerLevel.Card))
                                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                                         .padding(horizontal = 12.dp, vertical = 10.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -1195,7 +1196,7 @@ private fun BottomBarPreview(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp)),
+            .clip(AppShapes.container(ContainerLevel.Dialog)),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         tonalElevation = 2.dp
     ) {
@@ -1325,7 +1326,7 @@ private fun BottomBarTabItem(
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .clip(RoundedCornerShape(10.dp))
+                .clip(AppShapes.container(ContainerLevel.Field))
                 .background(itemColor.copy(alpha = 0.12f))
                 .clickable { showColorPicker = true },
             contentAlignment = Alignment.Center
@@ -1376,7 +1377,7 @@ private fun BottomBarTabItem(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(AppShapes.container(ContainerLevel.Field))
                                 .clickable {
                                     onColorChange(index)
                                     showColorPicker = false
@@ -1387,7 +1388,7 @@ private fun BottomBarTabItem(
                             Box(
                                 modifier = Modifier
                                     .size(24.dp)
-                                    .clip(RoundedCornerShape(6.dp))
+                                    .clip(AppShapes.container(ContainerLevel.Chip))
                                     .background(color)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
