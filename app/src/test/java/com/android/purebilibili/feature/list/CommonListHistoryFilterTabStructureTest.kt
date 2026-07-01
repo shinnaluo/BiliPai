@@ -37,6 +37,14 @@ class CommonListHistoryFilterTabStructureTest {
             historyFilterSection.contains("dragSelectionEnabled = historyFilterChrome.dragSelectionEnabled"),
             "液态 dock 指示器必须支持左右滑动切换"
         )
+        assertTrue(
+            historyFilterSection.contains("modifier = Modifier.fillMaxWidth()"),
+            "液态 dock 应铺满可用宽度，避免固定 itemWidth 把指示器压扁"
+        )
+        assertTrue(
+            historyFilterSection.contains("itemWidth = historyFilterChrome.itemWidthDp?.dp"),
+            "液态 dock 不应再强制固定 tab 宽度"
+        )
         val liquidDockBranch = historyFilterSection
             .substringAfter("if (historyFilterChrome.useLiquidDock) {")
             .substringBefore("} else {")

@@ -2,8 +2,7 @@ package com.android.purebilibili.feature.list
 
 import com.android.purebilibili.core.store.HomeSettings
 import com.android.purebilibili.core.theme.UiPreset
-import com.android.purebilibili.feature.home.components.BOTTOM_BAR_LIQUID_SEGMENTED_CONTROL_HEIGHT_DP
-import com.android.purebilibili.feature.home.components.BOTTOM_BAR_LIQUID_SEGMENTED_CONTROL_INDICATOR_HEIGHT_DP
+
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -18,8 +17,10 @@ class HistoryFilterTabChromePolicyTest {
         )
 
         assertTrue(spec.useLiquidDock)
-        assertEquals(BOTTOM_BAR_LIQUID_SEGMENTED_CONTROL_HEIGHT_DP, spec.heightDp)
-        assertEquals(BOTTOM_BAR_LIQUID_SEGMENTED_CONTROL_INDICATOR_HEIGHT_DP, spec.indicatorHeightDp)
+        assertEquals(HISTORY_FILTER_LIQUID_DOCK_HEIGHT_DP, spec.heightDp)
+        assertEquals(HISTORY_FILTER_LIQUID_DOCK_INDICATOR_HEIGHT_DP, spec.indicatorHeightDp)
+        assertEquals(HISTORY_FILTER_LIQUID_DOCK_LABEL_FONT_SIZE_SP, spec.labelFontSizeSp)
+        assertEquals(null, spec.itemWidthDp)
         assertTrue(spec.dragSelectionEnabled)
     }
 

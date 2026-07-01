@@ -1238,8 +1238,9 @@ fun CommonListScreen(
                                     onSelected = { index ->
                                         HistoryContentFilter.entries.getOrNull(index)?.let(onHistoryFilterSelected)
                                     },
+                                    modifier = Modifier.fillMaxWidth(),
                                     enabled = !isHistoryBatchMode,
-                                    itemWidth = historyFilterChrome.itemWidthDp.dp,
+                                    itemWidth = historyFilterChrome.itemWidthDp?.dp,
                                     height = historyFilterChrome.heightDp.dp,
                                     indicatorHeight = historyFilterChrome.indicatorHeightDp.dp,
                                     labelFontSize = historyFilterChrome.labelFontSizeSp.sp,
@@ -1262,7 +1263,14 @@ fun CommonListScreen(
                                             selected = historyContentFilter == filter,
                                             enabled = !isHistoryBatchMode,
                                             onClick = { onHistoryFilterSelected(filter) },
-                                            label = { Text(filter.label) },
+                                            label = {
+                                                Text(
+                                                    text = filter.label,
+                                                    style = MaterialTheme.typography.labelLarge.copy(
+                                                        fontSize = historyFilterChrome.labelFontSizeSp.sp
+                                                    )
+                                                )
+                                            },
                                             colors = FilterChipDefaults.filterChipColors(
                                                 containerColor = MaterialTheme.colorScheme.surface,
                                                 labelColor = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -4,14 +4,15 @@ import com.android.purebilibili.core.store.HomeSettings
 import com.android.purebilibili.core.theme.AndroidNativeVariant
 import com.android.purebilibili.core.theme.UiPreset
 import com.android.purebilibili.core.ui.resolveCompactCapsuleChromeSpec
-import com.android.purebilibili.feature.home.components.BOTTOM_BAR_LIQUID_SEGMENTED_CONTROL_HEIGHT_DP
-import com.android.purebilibili.feature.home.components.BOTTOM_BAR_LIQUID_SEGMENTED_CONTROL_INDICATOR_HEIGHT_DP
+internal const val HISTORY_FILTER_LIQUID_DOCK_HEIGHT_DP = 58
+internal const val HISTORY_FILTER_LIQUID_DOCK_INDICATOR_HEIGHT_DP = 54
+internal const val HISTORY_FILTER_LIQUID_DOCK_LABEL_FONT_SIZE_SP = 15
 
 internal data class HistoryFilterTabChromeSpec(
     val useLiquidDock: Boolean,
     val heightDp: Int,
     val indicatorHeightDp: Int,
-    val itemWidthDp: Int,
+    val itemWidthDp: Int?,
     val horizontalPaddingDp: Int,
     val labelFontSizeSp: Int,
     val dragSelectionEnabled: Boolean
@@ -42,11 +43,12 @@ internal fun resolveHistoryFilterTabChromeSpec(
     return if (useLiquidDock) {
         HistoryFilterTabChromeSpec(
             useLiquidDock = true,
-            heightDp = BOTTOM_BAR_LIQUID_SEGMENTED_CONTROL_HEIGHT_DP,
-            indicatorHeightDp = BOTTOM_BAR_LIQUID_SEGMENTED_CONTROL_INDICATOR_HEIGHT_DP,
-            itemWidthDp = resolveHistoryFilterTabItemWidthDp(filterCount),
+            heightDp = HISTORY_FILTER_LIQUID_DOCK_HEIGHT_DP,
+            indicatorHeightDp = HISTORY_FILTER_LIQUID_DOCK_INDICATOR_HEIGHT_DP,
+            // 全宽 dock：固定 itemWidth 会把指示器压扁，导致整体显得过小。
+            itemWidthDp = null,
             horizontalPaddingDp = 16,
-            labelFontSizeSp = 13,
+            labelFontSizeSp = HISTORY_FILTER_LIQUID_DOCK_LABEL_FONT_SIZE_SP,
             dragSelectionEnabled = true
         )
     } else {
@@ -56,7 +58,7 @@ internal fun resolveHistoryFilterTabChromeSpec(
             indicatorHeightDp = 30,
             itemWidthDp = resolveHistoryFilterTabItemWidthDp(filterCount),
             horizontalPaddingDp = 12,
-            labelFontSizeSp = 14,
+            labelFontSizeSp = HISTORY_FILTER_LIQUID_DOCK_LABEL_FONT_SIZE_SP,
             dragSelectionEnabled = false
         )
     }
