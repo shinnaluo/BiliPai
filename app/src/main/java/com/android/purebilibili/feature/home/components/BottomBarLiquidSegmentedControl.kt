@@ -33,7 +33,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -248,6 +250,23 @@ internal fun resolveSegmentedControlSlidePressProgress(
         tapPressRefractionEnabled -> pressProgress
         else -> 0f
     }
+}
+
+internal fun shouldTriggerSegmentedControlPagerSettleRebound(
+    pagerLinked: Boolean,
+    wasScrolling: Boolean,
+    isScrolling: Boolean,
+    isDragging: Boolean,
+): Boolean = pagerLinked && wasScrolling && !isScrolling && !isDragging
+
+internal fun resolveCombinedIndicatorSettleReboundTransform(
+    clickPulse: BottomBarClickPulseTransform,
+    dragSettle: BottomBarClickPulseTransform,
+): BottomBarClickPulseTransform {
+    return BottomBarClickPulseTransform(
+        scaleX = clickPulse.scaleX * dragSettle.scaleX,
+        scaleY = clickPulse.scaleY * dragSettle.scaleY,
+    )
 }
 
 @Composable
@@ -518,6 +537,8 @@ fun BottomBarLiquidSegmentedControl(
     val safeSelectedIndex = selectedIndex.coerceIn(0, itemCount - 1)
     val motionSpec = remember { resolveSegmentedControlMotionSpec() }
     val clickPulseKey = remember { mutableIntStateOf(0) }
+    val settleReboundPulseKey = remember { mutableIntStateOf(0) }
+    var previousPagerScrolling by remember(pagerIsScrolling) { mutableStateOf(pagerIsScrolling) }
     val clickPulseTransform = rememberBottomBarClickPulseTransform(clickPulseKey.intValue)
     val dragState = rememberDampedDragAnimationState(
         initialIndex = safeSelectedIndex,
@@ -586,6 +607,29 @@ fun BottomBarLiquidSegmentedControl(
             }
         }
     }
+    LaunchedEffect(dragState.settledReleaseCount) {
+        if (dragState.settledReleaseCount > 0) {
+            settleReboundPulseKey.intValue = dragState.settledReleaseCount
+        }
+    }
+    LaunchedEffect(pagerIsScrolling, pagerLinked, dragState.isDragging) {
+        if (
+            shouldTriggerSegmentedControlPagerSettleRebound(
+                pagerLinked = pagerLinked,
+                wasScrolling = previousPagerScrolling,
+                isScrolling = pagerIsScrolling,
+                isDragging = dragState.isDragging,
+            )
+        ) {
+            settleReboundPulseKey.intValue += 1
+        }
+        previousPagerScrolling = pagerIsScrolling
+    }
+    val settleReboundTransform = rememberBottomBarSettleReboundTransform(settleReboundPulseKey.intValue)
+    val indicatorSettleReboundTransform = resolveCombinedIndicatorSettleReboundTransform(
+        clickPulse = clickPulseTransform,
+        dragSettle = settleReboundTransform,
+    )
 
     BoxWithConstraints(
         modifier = modifier
@@ -811,7 +855,7 @@ fun BottomBarLiquidSegmentedControl(
             dockContentAlpha = 1f,
             indicatorTranslationXPx = with(density) { indicatorOffset.toPx() },
             indicatorPanelOffsetPx = panelOffsetPx,
-            indicatorSettleReboundTransform = clickPulseTransform,
+            indicatorSettleReboundTransform = indicatorSettleReboundTransform,
             indicatorWidth = indicatorWidth,
             indicatorHeight = resolvedIndicatorHeight,
             shellShape = indicatorShape,

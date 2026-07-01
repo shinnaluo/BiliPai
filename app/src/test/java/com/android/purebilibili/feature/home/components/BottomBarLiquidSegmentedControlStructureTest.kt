@@ -267,7 +267,9 @@ class BottomBarLiquidSegmentedControlStructureTest {
         assertTrue(source.contains("indicatorWidth = indicatorWidth"))
         assertTrue(source.contains("indicatorHeight = resolvedIndicatorHeight"))
         assertTrue(source.contains("indicatorPanelOffsetPx = panelOffsetPx"))
-        assertTrue(source.contains("indicatorSettleReboundTransform = clickPulseTransform"))
+        assertTrue(source.contains("rememberBottomBarSettleReboundTransform(settleReboundPulseKey.intValue)"))
+        assertTrue(source.contains("resolveCombinedIndicatorSettleReboundTransform("))
+        assertTrue(source.contains("indicatorSettleReboundTransform = indicatorSettleReboundTransform"))
         assertFalse(source.contains("scaleX = indicatorTransform.scaleX"))
         assertFalse(source.contains("scaleY = indicatorTransform.scaleY"))
         assertFalse(source.contains("containerWidthDp = maxWidth.value"))
@@ -352,6 +354,47 @@ class BottomBarLiquidSegmentedControlStructureTest {
     fun `pager linked segmented control reuses bottom bar drag state path`() {
         assertTrue(resolveSegmentedControlPagerLinked(pagerIndicatorPosition = 0.4f))
         assertFalse(resolveSegmentedControlPagerLinked(pagerIndicatorPosition = null))
+    }
+
+    @Test
+    fun `settle rebound triggers after drag release and pager stop`() {
+        assertTrue(
+            shouldTriggerSegmentedControlPagerSettleRebound(
+                pagerLinked = true,
+                wasScrolling = true,
+                isScrolling = false,
+                isDragging = false,
+            )
+        )
+        assertFalse(
+            shouldTriggerSegmentedControlPagerSettleRebound(
+                pagerLinked = false,
+                wasScrolling = true,
+                isScrolling = false,
+                isDragging = false,
+            )
+        )
+        assertFalse(
+            shouldTriggerSegmentedControlPagerSettleRebound(
+                pagerLinked = true,
+                wasScrolling = true,
+                isScrolling = false,
+                isDragging = true,
+            )
+        )
+        val combined = resolveCombinedIndicatorSettleReboundTransform(
+            clickPulse = BottomBarClickPulseTransform(scaleX = 0.95f),
+            dragSettle = BottomBarClickPulseTransform(scaleX = 1.08f, scaleY = 1.06f),
+        )
+        assertEquals(0.95f * 1.08f, combined.scaleX)
+        assertEquals(1.06f, combined.scaleY)
+
+        val source = loadSource(
+            "app/src/main/java/com/android/purebilibili/feature/home/components/BottomBarLiquidSegmentedControl.kt"
+        )
+        assertTrue(source.contains("rememberBottomBarSettleReboundTransform(settleReboundPulseKey.intValue)"))
+        assertTrue(source.contains("dragState.settledReleaseCount"))
+        assertTrue(source.contains("resolveCombinedIndicatorSettleReboundTransform("))
     }
 
     @Test

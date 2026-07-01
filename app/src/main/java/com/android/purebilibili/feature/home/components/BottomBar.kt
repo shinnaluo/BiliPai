@@ -1868,7 +1868,7 @@ private fun rememberBottomBarTapSwitchPressProgress(
 }
 
 @Composable
-private fun rememberBottomBarSettleReboundTransform(
+internal fun rememberBottomBarSettleReboundTransform(
     pulseKey: Int
 ): BottomBarClickPulseTransform {
     val progress = remember { Animatable(1f) }
