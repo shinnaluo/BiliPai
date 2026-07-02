@@ -2,7 +2,6 @@ package com.android.purebilibili.navigation3
 
 import android.app.Application
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -33,12 +32,10 @@ import androidx.navigationevent.compose.rememberNavigationEventState
 import com.android.purebilibili.core.ui.ProvideAnimatedVisibilityScope
 import com.android.purebilibili.core.ui.transition.LocalVideoCardSharedElementSourceRoute
 import com.android.purebilibili.core.ui.transition.LocalVideoCardTransitionSession
-import com.android.purebilibili.core.ui.transition.VideoCardContainerTransformOverlay
 import com.android.purebilibili.core.ui.transition.VideoCardTransitionController
 import com.android.purebilibili.core.ui.transition.VideoCardTransitionSession
 import com.android.purebilibili.core.ui.transition.VideoSharedTransitionBackdropHost
 import com.android.purebilibili.core.ui.transition.isVideoSharedElementRouteTransition
-import com.android.purebilibili.core.ui.transition.resolveVideoCardTransitionExpandedFractionFromPredictiveGestureProgress
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -216,11 +213,7 @@ internal fun BiliPaiNavDisplayHost(
                     is InProgress -> {
                         predictiveBackdropGestureActive = true
                         val gestureProgress = state.latestEvent.progress
-                        controller.applyPredictiveBackdropFraction(
-                            resolveVideoCardTransitionExpandedFractionFromPredictiveGestureProgress(
-                                gestureProgress
-                            )
-                        )
+                        controller.applyPredictiveBackdropFraction(1f - gestureProgress)
                     }
                     else -> {
                         if (
@@ -242,41 +235,29 @@ internal fun BiliPaiNavDisplayHost(
         onBackCancelled = { commitTransition -> commitTransition() },
     )
 
-    Box(modifier = modifier) {
-        NavDisplay(
-            sceneState = sceneState,
-            navigationEventState = navigationEventState,
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.TopStart,
-            sizeTransform = null,
-            transitionEffects = NavDisplayTransitionEffects(blockInputDuringTransition = true),
-            transitionSpec = {
-                with(predictiveBackHandler) {
-                    onTransitionSpec()
-                }
-            },
-            popTransitionSpec = {
-                with(predictiveBackHandler) {
-                    onPopTransitionSpec()
-                }
-            },
-            predictivePopTransitionSpec = { swipeEdge ->
-                with(predictiveBackHandler) {
-                    onPredictivePopTransitionSpec(swipeEdge = swipeEdge)
-                }
-            },
-        )
-        CompositionLocalProvider(
-            LocalVideoCardTransitionSession provides videoCardTransitionSession
-        ) {
-            VideoCardContainerTransformOverlay(
-                cardTransitionEnabled = cardTransitionEnabled,
-                sourceKey = sourceMetadata.sourceKey,
-                cardFullyVisible = sourceMetadata.cardFullyVisible,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-    }
+    NavDisplay(
+        sceneState = sceneState,
+        navigationEventState = navigationEventState,
+        modifier = modifier,
+        contentAlignment = Alignment.TopStart,
+        sizeTransform = null,
+        transitionEffects = NavDisplayTransitionEffects(blockInputDuringTransition = true),
+        transitionSpec = {
+            with(predictiveBackHandler) {
+                onTransitionSpec()
+            }
+        },
+        popTransitionSpec = {
+            with(predictiveBackHandler) {
+                onPopTransitionSpec()
+            }
+        },
+        predictivePopTransitionSpec = { swipeEdge ->
+            with(predictiveBackHandler) {
+                onPredictivePopTransitionSpec(swipeEdge = swipeEdge)
+            }
+        },
+    )
 }
 
 @Composable

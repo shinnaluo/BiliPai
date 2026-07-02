@@ -895,19 +895,6 @@ internal fun resolveVideoDetailLoadingTransitionFrame(
     }
 }
 
-internal fun resolveVideoDetailContainerTransformContentAlpha(
-    session: VideoCardTransitionSession
-): Float {
-    return if (
-        session.phase == VideoCardTransitionPhase.EXPANDING &&
-        session.progress < 0.92f
-    ) {
-        0f
-    } else {
-        1f
-    }
-}
-
 internal fun shouldApplyPipParamsUpdate(
     pipModeEnabled: Boolean,
     modeChanged: Boolean,
@@ -1409,18 +1396,13 @@ fun VideoDetailScreen(
         entryVisualProgress.value,
         transitionEnabled,
         fallbackEntryBlurEnabled,
-        transitionMaxBlurRadiusPx,
-        videoCardTransitionSession
+        transitionMaxBlurRadiusPx
     ) {
-        val baseFrame = resolveVideoDetailEntryVisualFrame(
+        resolveVideoDetailEntryVisualFrame(
             rawProgress = entryVisualProgress.value,
             transitionEnabled = transitionEnabled,
             fallbackBlurEnabled = fallbackEntryBlurEnabled,
             maxBlurRadiusPx = transitionMaxBlurRadiusPx
-        )
-        baseFrame.copy(
-            contentAlpha = baseFrame.contentAlpha *
-                resolveVideoDetailContainerTransformContentAlpha(videoCardTransitionSession)
         )
     }
 

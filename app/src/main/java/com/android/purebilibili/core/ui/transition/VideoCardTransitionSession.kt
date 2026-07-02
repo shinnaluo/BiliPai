@@ -13,7 +13,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.ui.geometry.Rect
 import com.android.purebilibili.core.ui.adaptive.MotionTier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -30,8 +29,7 @@ internal enum class VideoCardTransitionPhase {
 
 internal data class VideoCardTransitionSession(
     val phase: VideoCardTransitionPhase = VideoCardTransitionPhase.IDLE,
-    val progress: Float = 0f,
-    val skipBackdropEffects: Boolean = false
+    val progress: Float = 0f
 )
 
 internal enum class VideoCardTransitionDirection {
@@ -46,19 +44,6 @@ internal data class VideoCardTransitionBackdropFrame(
     val scrimAlpha: Float
 )
 
-internal data class VideoCardContainerTransformBounds(
-    val sourceBoundsInRoot: Rect?,
-    val overlayBoundsInRoot: Rect,
-    val targetBoundsInOverlay: Rect
-)
-
-internal data class VideoCardContainerTransformFrame(
-    val active: Boolean,
-    val rect: Rect,
-    val cornerRadiusDp: Float,
-    val alpha: Float
-)
-
 internal val LocalVideoCardTransitionSession = compositionLocalOf { VideoCardTransitionSession() }
 
 internal const val VIDEO_CARD_TRANSITION_MIN_SCALE = 0.94f
@@ -68,8 +53,6 @@ private const val VIDEO_CARD_TRANSITION_COLLAPSE_BLUR_POWER = 1.8f
 private const val VIDEO_CARD_TRANSITION_EXPAND_BLUR_POWER = 1.35f
 private const val VIDEO_CARD_TRANSITION_EXPAND_BLUR_PEAK_PROGRESS = 0.35f
 private const val VIDEO_CARD_TRANSITION_BLUR_EFFECT_MIN_RADIUS_DP = 0.5f
-private const val VIDEO_CARD_CONTAINER_TARGET_CORNER_DP = 0f
-private const val VIDEO_CARD_CONTAINER_ALPHA = 1f
 
 internal enum class VideoTransitionBackdropBlurMode {
     RENDER_EFFECT,
@@ -182,71 +165,6 @@ internal fun resolveVideoTransitionBackdropBlurMode(
     }
 }
 
-internal fun resolveVideoCardContainerTransformFrame(
-    cardTransitionEnabled: Boolean,
-    sourceKeyMatches: Boolean,
-    cardFullyVisible: Boolean,
-    motionTier: MotionTier,
-    session: VideoCardTransitionSession,
-    bounds: VideoCardContainerTransformBounds?,
-    sourceCornerRadiusDp: Float
-): VideoCardContainerTransformFrame {
-    val inactiveFrame = inactiveVideoCardContainerTransformFrame()
-    val sourceBoundsInRoot = bounds?.sourceBoundsInRoot ?: return inactiveFrame
-    if (
-        !cardTransitionEnabled ||
-        !sourceKeyMatches ||
-        !cardFullyVisible ||
-        motionTier == MotionTier.Reduced ||
-        session.phase == VideoCardTransitionPhase.IDLE ||
-        session.phase == VideoCardTransitionPhase.EXPANDED
-    ) {
-        return inactiveFrame
-    }
-
-    val progress = session.progress.coerceIn(0f, 1f)
-    val overlayBounds = bounds.overlayBoundsInRoot
-    val sourceBoundsInOverlay = Rect(
-        left = sourceBoundsInRoot.left - overlayBounds.left,
-        top = sourceBoundsInRoot.top - overlayBounds.top,
-        right = sourceBoundsInRoot.right - overlayBounds.left,
-        bottom = sourceBoundsInRoot.bottom - overlayBounds.top
-    )
-    val targetBounds = bounds.targetBoundsInOverlay
-    val rect = Rect(
-        left = lerpFloat(sourceBoundsInOverlay.left, targetBounds.left, progress),
-        top = lerpFloat(sourceBoundsInOverlay.top, targetBounds.top, progress),
-        right = lerpFloat(sourceBoundsInOverlay.right, targetBounds.right, progress),
-        bottom = lerpFloat(sourceBoundsInOverlay.bottom, targetBounds.bottom, progress)
-    )
-
-    return VideoCardContainerTransformFrame(
-        active = true,
-        rect = rect,
-        cornerRadiusDp = lerpFloat(
-            sourceCornerRadiusDp.coerceAtLeast(0f),
-            VIDEO_CARD_CONTAINER_TARGET_CORNER_DP,
-            progress
-        ),
-        alpha = VIDEO_CARD_CONTAINER_ALPHA
-    )
-}
-
-internal fun inactiveVideoCardContainerTransformFrame(): VideoCardContainerTransformFrame {
-    return VideoCardContainerTransformFrame(
-        active = false,
-        rect = Rect(0f, 0f, 0f, 0f),
-        cornerRadiusDp = 0f,
-        alpha = 0f
-    )
-}
-
-internal fun resolveVideoCardTransitionExpandedFractionFromPredictiveGestureProgress(
-    gestureProgress: Float
-): Float {
-    return (1f - gestureProgress).coerceIn(0f, 1f)
-}
-
 internal fun resolveVideoCardTransitionSessionFromExpandedFraction(
     expandedFraction: Float
 ): VideoCardTransitionSession {
@@ -302,21 +220,19 @@ internal class VideoCardTransitionController(
         cancelRunningAnimation()
         runningJob = scope.launch {
             val startProgress = progressAnimatable.value.coerceIn(0f, 1f)
-            startProgressObservation(
-                phase = VideoCardTransitionPhase.COLLAPSING,
-                skipBackdropEffects = skipBackdropEffects
-            )
+            startProgressObservation(VideoCardTransitionPhase.COLLAPSING)
             try {
-                publishSession(
-                    phase = VideoCardTransitionPhase.COLLAPSING,
-                    progress = startProgress,
-                    skipBackdropEffects = skipBackdropEffects
-                )
-                progressAnimatable.animateTo(
-                    targetValue = 0f,
-                    animationSpec = tween(durationMillis = durationMillis, easing = easing)
-                )
-                publishSession(VideoCardTransitionPhase.IDLE, 0f)
+                publishSession(VideoCardTransitionPhase.COLLAPSING, startProgress)
+                if (skipBackdropEffects) {
+                    progressAnimatable.snapTo(0f)
+                    publishSession(VideoCardTransitionPhase.IDLE, 0f)
+                } else {
+                    progressAnimatable.animateTo(
+                        targetValue = 0f,
+                        animationSpec = tween(durationMillis = durationMillis, easing = easing)
+                    )
+                    publishSession(VideoCardTransitionPhase.IDLE, 0f)
+                }
             } finally {
                 stopProgressObservation()
             }
@@ -350,19 +266,12 @@ internal class VideoCardTransitionController(
         }
     }
 
-    private fun startProgressObservation(
-        phase: VideoCardTransitionPhase,
-        skipBackdropEffects: Boolean = false
-    ) {
+    private fun startProgressObservation(phase: VideoCardTransitionPhase) {
         stopProgressObservation()
         progressObserverJob = scope.launch {
             snapshotFlow { progressAnimatable.value }.collect { value ->
                 if (!isActive) return@collect
-                publishSession(
-                    phase = phase,
-                    progress = value.coerceIn(0f, 1f),
-                    skipBackdropEffects = skipBackdropEffects
-                )
+                publishSession(phase, value.coerceIn(0f, 1f))
             }
         }
     }
@@ -372,15 +281,10 @@ internal class VideoCardTransitionController(
         progressObserverJob = null
     }
 
-    private fun publishSession(
-        phase: VideoCardTransitionPhase,
-        progress: Float,
-        skipBackdropEffects: Boolean = false
-    ) {
+    private fun publishSession(phase: VideoCardTransitionPhase, progress: Float) {
         session = VideoCardTransitionSession(
             phase = phase,
-            progress = progress.coerceIn(0f, 1f),
-            skipBackdropEffects = skipBackdropEffects
+            progress = progress.coerceIn(0f, 1f)
         )
     }
 
@@ -389,10 +293,6 @@ internal class VideoCardTransitionController(
         runningJob = null
         stopProgressObservation()
     }
-}
-
-private fun lerpFloat(start: Float, stop: Float, fraction: Float): Float {
-    return start + (stop - start) * fraction.coerceIn(0f, 1f)
 }
 
 @Composable

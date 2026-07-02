@@ -18,7 +18,6 @@ class BiliPaiNavDisplayHostStructureTest {
         assertTrue(source.contains("LocalVideoCardSharedElementSourceRoute provides key.toLegacyRoute()"))
         assertTrue(source.contains("sharedTransitionScope = sharedTransitionScope"))
         assertTrue(source.contains("VideoSharedTransitionBackdropHost("))
-        assertTrue(source.contains("VideoCardContainerTransformOverlay("))
         assertTrue(source.contains("videoCardTransitionController"))
         assertTrue(source.contains("LocalVideoCardTransitionSession"))
         assertTrue(source.contains("predictivePopTransitionSpec"))
