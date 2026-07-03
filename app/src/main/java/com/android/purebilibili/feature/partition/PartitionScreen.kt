@@ -84,6 +84,7 @@ import com.android.purebilibili.core.ui.transition.videoCoverSharedElementKey
 import com.android.purebilibili.core.ui.transition.videoMetadataSharedElementBoundsTransformSpec
 import com.android.purebilibili.core.ui.transition.videoTitleSharedElementKey
 import com.android.purebilibili.core.util.CardPositionManager
+import com.android.purebilibili.data.model.response.BangumiType
 import com.android.purebilibili.data.model.response.VideoItem
 import com.android.purebilibili.data.repository.VideoRepository
 import com.android.purebilibili.feature.common.resolveIndexedVideoLazyKey
@@ -165,6 +166,15 @@ private val partitionTabs = listOf(
 private val PartitionSideRailItemHeight = 48.dp
 private val PartitionSideRailItemSpacing = 4.dp
 private val PartitionVideoListMaxPush = 20.dp
+
+internal fun resolvePartitionBangumiType(partitionId: Int): Int? = when (partitionId) {
+    13 -> BangumiType.ANIME.value
+    167 -> BangumiType.GUOCHUANG.value
+    23 -> BangumiType.MOVIE.value
+    11 -> BangumiType.TV_SHOW.value
+    177 -> BangumiType.DOCUMENTARY.value
+    else -> null
+}
 
 internal data class PartitionSideRailIndicatorHorizontalPadding(
     val start: androidx.compose.ui.unit.Dp,
@@ -276,7 +286,8 @@ class PartitionFeedViewModel : ViewModel() {
 @Composable
 fun PartitionScreen(
     onBack: () -> Unit,
-    onVideoClick: (String, Long, String) -> Unit = { _, _, _ -> }
+    onVideoClick: (String, Long, String) -> Unit = { _, _, _ -> },
+    onBangumiClick: (Int) -> Unit = {}
 ) {
     val hazeState = com.android.purebilibili.core.ui.blur.rememberRecoverableHazeState()
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -309,7 +320,8 @@ fun PartitionScreen(
                 end = 16.dp
             ),
             hazeState = hazeState,
-            onVideoClick = { video -> onVideoClick(video.bvid, video.cid, video.pic) }
+            onVideoClick = { video -> onVideoClick(video.bvid, video.cid, video.pic) },
+            onBangumiClick = onBangumiClick
         )
     }
 }
@@ -328,6 +340,7 @@ fun PartitionContent(
     ),
     hazeState: HazeState? = null,
     onVideoClick: (VideoItem) -> Unit = {},
+    onBangumiClick: (Int) -> Unit = {},
     viewModel: PartitionFeedViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -403,7 +416,14 @@ fun PartitionContent(
                 ),
                 liquidGlassIndicatorEnabled = liquidGlassIndicatorEnabled,
                 onVideoListPushChanged = { sideRailVideoPushTargetPx = it },
-                onPartitionSelected = viewModel::selectPartition
+                onPartitionSelected = { partition ->
+                    val bangumiType = resolvePartitionBangumiType(partition.id)
+                    if (bangumiType != null) {
+                        onBangumiClick(bangumiType)
+                    } else {
+                        viewModel.selectPartition(partition)
+                    }
+                }
             )
 
             PartitionVideoList(

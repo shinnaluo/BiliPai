@@ -1424,7 +1424,8 @@ fun HomeScreen(
                                             start = 16.dp,
                                             end = 16.dp
                                         ),
-                                        onVideoClick = onPartitionVideoClick
+                                        onVideoClick = onPartitionVideoClick,
+                                        onBangumiClick = onBangumiClick
                                     )
                                 }
                             }

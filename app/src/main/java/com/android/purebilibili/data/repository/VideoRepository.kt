@@ -37,6 +37,9 @@ import java.util.concurrent.ConcurrentHashMap
 private const val SUBTITLE_CUE_CACHE_MAX_ENTRIES = 512
 private const val SUBTITLE_CUE_CACHE_ENTRY_OVERHEAD_BYTES = 512L
 private const val SUBTITLE_CUE_ESTIMATED_BYTES_PER_CUE = 160L
+private val UGC_MAIN_REGION_TIDS = setOf(
+    1, 3, 4, 5, 36, 119, 129, 155, 160, 181, 188, 202, 211, 217, 223, 234
+)
 
 internal fun shouldStartHomePreload(
     hasPreloadedData: Boolean,
@@ -55,6 +58,15 @@ internal fun shouldReuseInFlightPreloadForHomeRequest(
     hasPreloadedData: Boolean
 ): Boolean {
     return idx == 0 && isPreloading && !hasPreloadedData
+}
+
+internal fun shouldFallbackRegionLatestToRanking(
+    tid: Int,
+    page: Int,
+    latestVideoCount: Int,
+    latestResponseCode: Int
+): Boolean {
+    return tid in UGC_MAIN_REGION_TIDS && page == 1 && (latestResponseCode != 0 || latestVideoCount == 0)
 }
 
 internal fun shouldReportHomeDataReadyForSplash(
@@ -701,7 +713,23 @@ object VideoRepository {
     suspend fun getRegionVideos(tid: Int, page: Int = 1): Result<List<VideoItem>> = withContext(Dispatchers.IO) {
         try {
             val resp = api.getRegionVideos(rid = tid, pn = page, ps = 30)
-            val list = resp.data?.archives?.map { it.toVideoItem() }?.filter { it.bvid.isNotEmpty() } ?: emptyList()
+            val list = resp.data?.archives
+                ?.map { it.toVideoItem() }
+                ?.filter { it.bvid.isNotEmpty() }
+                ?: emptyList()
+            if (shouldFallbackRegionLatestToRanking(
+                    tid = tid,
+                    page = page,
+                    latestVideoCount = list.size,
+                    latestResponseCode = resp.code
+                )
+            ) {
+                // dynamic/region 只稳定支持子分区；一级分区用排行榜兜底，避免标签页空白。
+                return@withContext getRankingVideos(rid = tid)
+            }
+            if (resp.code != 0) {
+                return@withContext Result.failure(Exception(resp.message.ifBlank { "分区视频加载失败(${resp.code})" }))
+            }
             Result.success(list)
         } catch (e: Exception) {
             e.printStackTrace()

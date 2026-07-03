@@ -3,8 +3,11 @@ package com.android.purebilibili.feature.partition
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.android.purebilibili.data.model.response.BangumiType
 import java.io.File
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -30,6 +33,8 @@ class PartitionScreenStructureTest {
         assertTrue(source.contains("LocalVideoCardSharedElementSourceRoute.current"))
         assertTrue(source.contains("VideoRepository.getPopularVideos(page = currentPage)"))
         assertTrue(source.contains("VideoRepository.getRegionVideos(tid = partition.id, page = currentPage)"))
+        assertTrue(source.contains("resolvePartitionBangumiType(partition.id)"))
+        assertTrue(source.contains("onBangumiClick(bangumiType)"))
         assertFalse(source.contains("LazyVerticalGrid("))
     }
 
@@ -117,6 +122,16 @@ class PartitionScreenStructureTest {
         assertTrue(resolvePartitionSideRailItemSelectionProgress(itemIndex = 3, indicatorPosition = 3f) == 1f)
         assertTrue(resolvePartitionSideRailItemSelectionProgress(itemIndex = 3, indicatorPosition = 3.5f) == 0.5f)
         assertTrue(resolvePartitionSideRailItemSelectionProgress(itemIndex = 3, indicatorPosition = 4.2f) == 0f)
+    }
+
+    @Test
+    fun `pgc partitions map to bangumi page types`() {
+        assertEquals(BangumiType.ANIME.value, resolvePartitionBangumiType(13))
+        assertEquals(BangumiType.GUOCHUANG.value, resolvePartitionBangumiType(167))
+        assertEquals(BangumiType.MOVIE.value, resolvePartitionBangumiType(23))
+        assertEquals(BangumiType.TV_SHOW.value, resolvePartitionBangumiType(11))
+        assertEquals(BangumiType.DOCUMENTARY.value, resolvePartitionBangumiType(177))
+        assertNull(resolvePartitionBangumiType(3))
     }
 
     @Test
